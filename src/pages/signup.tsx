@@ -1,61 +1,86 @@
 /*users.jsx*/
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 //You have to use the link component to link between you pages
-import { Link } from "react-router-dom";
+import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
 import { Query, graphql } from "react-apollo";
 import { useQuery } from "@apollo/react-hooks";
+import { ApolloClient } from "apollo-client";
+import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
+import { HttpLink } from "apollo-link-http";
+import { ApolloProvider } from "react-apollo";
 
-const SignUpPage = () => {
-  //const id = this.props.match.params.id  ;//this.props.match.params.id;
-  const id = 1;
-  type Host = {
-    // Mistake #3: The type is wrong here, and that should be caught at compile-time
-    email: string;
-    firstname: string;
-    lastname: string;
-  };
+interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
+  // Other props that belong to component it self not Router
+}
 
-  const { loading, error, data } = useQuery(GET_ALL_HOSTS);
+const cache = new InMemoryCache();
+
+const link = new HttpLink({
+  uri: "http://localhost:4000/graphql",
+});
+
+const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
+  cache,
+  link,
+});
+
+//const id = this.props.match.params.id  ;//this.props.match.params.id;
+type Host = {
+  // Mistake #3: The type is wrong here, and that should be caught at compile-time
+  email: string;
+  firstname: string;
+  lastname: string;
+};
+
+type Link = {
+  link: string;
+  duration: number;
+  email: string;
+};
+
+const urlId: {
+  urlid: string;
+} = {
+  urlid: "",
+};
+
+const SignUpPage: React.FC<SignUpPagePropsInterface> = (
+  props: SignUpPagePropsInterface
+) => {
+  const id = props.match.params.id;
+  urlId.urlid = id;
+
+  return (
+    <ApolloProvider client={client}>
+      <SignUpServer />
+    </ApolloProvider>
+  );
+};
+
+function SignUpServer() {
+  const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
+    variables: { id: urlId.urlid },
+  });
   return loading ? (
     <div>loading</div>
   ) : error ? (
     <div>An Error occured</div>
   ) : (
     <ul>
-      {data.host.map((host: Host) => (
-        <li>
-          {host.email} used by {host.firstname} {host.lastname}
-        </li>
-      ))}
+      <li>
+        {data.link.link} used by {data.link.email} for {data.link.duration}
+      </li>
     </ul>
   );
-  // (
-  // <Query query={query} variables={{id}} >
-  // {
-  //     (({loading, err, data}) => {
-  //         if(loading) return <div>loading</div>
-  //         return (
-  //             <div>{data.movieInfo.title}</div>
-  //         )
-  //     })
-  // }
-  // </Query>
-  // )
-  // return (
-  //   <div>
-  //     <h3> 404 Not Found!</h3>
-  //     <Link to="/">Main Page</Link>
-  //   </div>
-  // );
-};
+}
 
-const GET_ALL_HOSTS = gql`
-  query {
-    host {
+const GET_UNIQUE_LINK = gql`
+  query($id: String) {
+    link(id: $id) {
       email
-      firstname
-      lastname
+      duration
+      link
     }
   }
 `;

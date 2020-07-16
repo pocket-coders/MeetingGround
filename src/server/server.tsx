@@ -186,7 +186,7 @@ type Host = {
 
 function List() {
   const { loading, error, data } = useQuery(GET_ALL_HOSTS);
-  console.log("hehehe");
+  console.log("run check");
   return loading ? (
     <div>loading</div>
   ) : error ? (
