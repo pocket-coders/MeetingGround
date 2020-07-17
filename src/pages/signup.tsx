@@ -9,6 +9,9 @@ import { ApolloClient } from "apollo-client";
 import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
 import { HttpLink } from "apollo-link-http";
 import { ApolloProvider } from "react-apollo";
+import MyCalendar from "./Moment";
+import styled from "@emotion/styled";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -45,6 +48,14 @@ const urlId: {
   urlid: "",
 };
 
+const CalendarCard = styled.div`
+  margin: 0 auto;
+  width: 1000px;
+  height: 1000px;
+  align-items: center;
+  border-radius: 15px;
+`;
+
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
 ) => {
@@ -54,6 +65,9 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   return (
     <ApolloProvider client={client}>
       <SignUpServer />
+      <CalendarCard>
+        <MyCalendar />
+      </CalendarCard>
     </ApolloProvider>
   );
 };
@@ -65,7 +79,7 @@ function SignUpServer() {
   return loading ? (
     <div>loading</div>
   ) : error ? (
-    <div>An Error occured</div>
+    <div>An Error occurred: {error}</div>
   ) : (
     <ul>
       <li>
