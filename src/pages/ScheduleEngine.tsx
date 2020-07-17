@@ -6,17 +6,16 @@ import styled from "@emotion/styled";
 const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   //variable schedule is an object that consists of timelength and url.
   //url left blank when not generated
-  const scheduling: {
-    time: typeof timeLength;
-    url: string;
-  } = {
-    time: timeLength,
+  // const scheduling: {
+  //   time: typeof timeLength;
+  //   url: string;
+  // } = {
+  //   time: timeLength,
+  //   url: "",
+  // };
+  const [scheduling, setUrl] = useState({
     url: "",
-  };
-  //   const [scheduling, setUrl] = useState({
-  //     timeLength: timeLength,
-  //     url: null,
-  //   });
+  });
 
   function makeid(length: number) {
     var result = "";
@@ -30,10 +29,10 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   }
   const getUrl = async () => {
     const tempId = "meetingground.com/" + makeid(16);
-    scheduling.url = tempId;
-    // setUrl({
-    //   url: tempId,
-    // });
+    //scheduling.url = tempId;
+    setUrl({
+      url: tempId,
+    });
   };
 
   const handleGenerate = (e: any) => {
