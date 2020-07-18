@@ -13,9 +13,7 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   //   time: timeLength,
   //   url: "",
   // };
-  const [scheduling, setUrl] = useState({
-    url: "",
-  });
+  const [url, setUrl] = useState("");
 
   function makeid(length: number) {
     var result = "";
@@ -29,10 +27,10 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   }
   const getUrl = async () => {
     const tempId = "meetingground.com/" + makeid(16);
-    //scheduling.url = tempId;
-    setUrl({
-      url: tempId,
-    });
+    setUrl(tempId);
+    // setUrl({
+    //   url: tempId,
+    // });
   };
 
   const handleGenerate = (e: any) => {
@@ -59,7 +57,7 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
     <ScheduleEnginePack>
       <ScheduleCard timeLength={timeLength} />
       <form>
-        <input id="random_url" value={scheduling.url} />
+        <input id="random_url" value={url} />
         <button onClick={(e) => handleGenerate(e)}>Generate Link</button>
       </form>
     </ScheduleEnginePack>
