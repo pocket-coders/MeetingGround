@@ -1,9 +1,9 @@
 /*users.jsx*/
-import React, { Component, useState } from "react";
+import React from "react"; //, { Component, useState }
 //You have to use the link component to link between you pages
 import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
-import { Query, graphql } from "react-apollo";
+// import { Query, graphql } from "react-apollo";
 import { useQuery } from "@apollo/react-hooks";
 import { ApolloClient } from "apollo-client";
 import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
@@ -55,6 +55,7 @@ const CalendarCard = styled.div`
   align-items: center;
   border-radius: 15px;
 `;
+const temp: any[] = [];
 
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
@@ -66,7 +67,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     <ApolloProvider client={client}>
       <SignUpServer />
       <CalendarCard>
-        <MyCalendar />
+        <MyCalendar myList={temp} />
       </CalendarCard>
     </ApolloProvider>
   );
