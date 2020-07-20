@@ -27,13 +27,13 @@ class App extends Component {
       <Router>
         {/*All our Routes goes here!*/}
         <Switch>
-          <Route exact path="/" component={LoginPage} />
-          <Route exact path="/login" component={LoginPage} />
+          <Route exact path="/" component={ConnectPage} />
+          <Route exact path="/login" component={ConnectPage} />
           <Route exact path="/home" component={HomePage} />
           <Route exact path="/404" component={NotFoundPage} />
           <Route exact path="/signup/:id" component={SignUpPage} />
           <Route exact path="/server" component={Server} />
-          <Route exact path="/connect" component={LoginPage} />
+          <Route exact path="/connect" component={ConnectPage} />
           {/*Check for link in server. if exists go to  SchedulePage -> userid*/}
           <Redirect to="/404" />
         </Switch>

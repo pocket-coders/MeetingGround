@@ -1,5 +1,5 @@
 /*users.jsx*/
-import React, { useState } from "react"; //, { Component, useState }
+import React, { useState, useEffect } from "react"; //, { Component, useState }
 //You have to use the link component to link between you pages
 import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
@@ -16,6 +16,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import DatePicker from "react-datepicker";
 //yarn add react-datepicker
 import "react-datepicker/dist/react-datepicker.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -52,6 +53,12 @@ const urlId: {
   urlid: "",
 };
 
+const timeSpan: {
+  interval: number;
+} = {
+  interval: 45,
+};
+
 const CalendarCard = styled.div`
   margin: 0 auto;
   width: 1000px;
@@ -60,6 +67,7 @@ const CalendarCard = styled.div`
   border-radius: 15px;
 `;
 const temp: any[] = [];
+let interval: number;
 
 // let handleChange = (date: any) => {
 //   this.setState({
@@ -74,21 +82,42 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   urlId.urlid = id;
 
   const [startDate, setStartDate] = useState<Date | null>(new Date());
+  //const [interval, setInterval] = useState(45);
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
+  function IntervalSetup() {
+    const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
+      variables: { id: urlId.urlid },
+    });
+
+    return loading ? (
+      <div>loading</div>
+    ) : error ? (
+      <div>An Error occurred: {error}</div>
+    ) : (
+      <div>
+        <DatePicker
+          showTimeSelect
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          timeClassName={handleColor}
+          // timeFormat="HH:mm"
+          timeIntervals={data.link.duration}
+          inline
+        />
+      </div>
+    );
+  }
+
+  //interval = IntervalSetup() > 0 ? IntervalSetup() : 45;
+
   return (
     <ApolloProvider client={client}>
       <SignUpServer />
-      <DatePicker
-        showTimeSelect
-        selected={startDate}
-        onChange={(date) => setStartDate(date)}
-        timeClassName={handleColor}
-        inline
-      />
+      <IntervalSetup />
       <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard>
