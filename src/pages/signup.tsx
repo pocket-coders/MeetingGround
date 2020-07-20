@@ -104,7 +104,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
           selected={startDate}
           onChange={(date) => setStartDate(date)}
           timeClassName={handleColor}
-          // timeFormat="HH:mm"
+          timeFormat="HH:mm"
           timeIntervals={data.link.duration}
           inline
         />
