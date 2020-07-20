@@ -20,6 +20,8 @@ import NotFoundPage from "./pages/404";
 import SignUpPage from "./pages/signup";
 import Server from "./server/server";
 import ConnectPage from "./calendar/connect";
+import SubmitInfoPage from "./pages/submitInfo";
+import ConfirmationPage from "./pages/confirmation";
 
 class App extends Component {
   render() {
@@ -34,6 +36,8 @@ class App extends Component {
           <Route exact path="/signup/:id" component={SignUpPage} />
           <Route exact path="/server" component={Server} />
           <Route exact path="/connect" component={ConnectPage} />
+          <Route exact path="/submit-info" component={SubmitInfoPage} />
+          <Route exact path="/confirmation" component={ConfirmationPage} />
           {/*Check for link in server. if exists go to  SchedulePage -> userid*/}
           <Redirect to="/404" />
         </Switch>

@@ -18,6 +18,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+import Redirect, { withRouter } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
@@ -92,6 +93,8 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     e.preventDefault();
     let main = startDate;
     console.log(main);
+    props.history.push("/submit-info");
+    // return <Redirect to="/404" />;
   }
 
   function IntervalSetup() {
@@ -116,7 +119,9 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             inline
           />
           <div className="form-group">
-            <button className="btn btn-primary">Select Date</button>
+            <button type="submit" className="btn btn-primary">
+              Select Date
+            </button>
           </div>
         </form>
       </div>
