@@ -17,7 +17,11 @@ import DatePicker from "react-datepicker";
 //yarn add react-datepicker
 import "react-datepicker/dist/react-datepicker.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import setSeconds from "date-fns/setSeconds";
+import setMinutes from "date-fns/setMinutes";
+import setHours from "date-fns/setHours";
 
+import Redirect, { withRouter } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
@@ -81,17 +85,51 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   const id = props.match.params.id;
   urlId.urlid = id;
 
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [startDate, setStartDate] = useState<Date>(
+    setHours(setMinutes(new Date(), 30), 16)
+  );
+
+  const [startTime, setStartTime] = useState<Date>(
+    setHours(setMinutes(new Date(), 30), 16)
+  );
   //const [interval, setInterval] = useState(45);
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
+  let excludeTimeDictionary: { [dateID: string]: Date[] } = {
+    "2020-6-20": [
+      setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+      setHours(setMinutes(new Date(), 30), 18),
+    ],
+    "2020-6-22": [
+      setHours(setMinutes(new Date(), 30), 19),
+      setHours(setMinutes(new Date(), 30), 17),
+    ],
+  };
+  //let excludeTimeList: Date[] = [];
+  const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+
+  const [selectTime, setSelect] = useState(false);
   function handleSubmit(e: any) {
     e.preventDefault();
+
+    //result contains the selected time + date
+    let result = new Date();
+
+    result.setTime(startTime.getTime()); //note time includes the month/date/year
+    result.setDate(startDate.getDate());
+    result.setMonth(startDate.getMonth());
+    result.setFullYear(startDate.getFullYear());
+
     let main = startDate;
     console.log(main);
+
+    console.log("result is: " + result);
+
+    props.history.push("/submit-info/" + id + "/" + result.toString());
+    // return <Redirect to="/404" />;
   }
 
   function IntervalSetup() {
@@ -107,16 +145,42 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       <div className="form-group">
         <form onSubmit={handleSubmit}>
           <DatePicker
-            showTimeSelect
+            // showTimeSelect
             selected={startDate}
-            onChange={(date) => setStartDate(date)}
-            timeClassName={handleColor}
+            onChange={(date: Date) => {
+              setStartDate(date);
+              let key =
+                date.getFullYear().toString() +
+                "-" +
+                date.getMonth().toString() +
+                "-" +
+                date.getDate().toString();
+              console.log("mykey: " + key);
+              setExcludeTimeList(excludeTimeDictionary[key]);
+              //excludeTimeList = excludeTimeDictionary[key];
+              console.log(excludeTimeList);
+              setSelect(true);
+            }}
             timeFormat="HH:mm"
             timeIntervals={data.link.duration}
             inline
           />
+          {selectTime && (
+            <DatePicker
+              showTimeSelect
+              showTimeSelectOnly
+              selected={startTime}
+              onChange={(date: Date) => setStartTime(date)}
+              timeFormat="HH:mm"
+              timeIntervals={data.link.duration}
+              excludeTimes={excludeTimeList}
+              inline
+            />
+          )}
           <div className="form-group">
-            <button className="btn btn-primary">Select Date</button>
+            <button type="submit" className="btn btn-primary">
+              Select Date
+            </button>
           </div>
         </form>
       </div>
