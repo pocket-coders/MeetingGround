@@ -4,24 +4,23 @@ import moment from "moment";
 import MyCalendar from "../pages/Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+// const getter = require("express");
 
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
 
-//npm install --save-dev @types/gapi
-
 const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
-  // let isSigned: boolean = false;
   const [name, setName] = useState("");
-  // let name: string = "";
   const [picUrl, setPicUrl] = useState("");
-  // let picUrl: string = "";
+  const [email, setEmail] = useState("");
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
   const [message, setMessage] = useState("");
-  // let message: string = "";
   const [myEvents, setMyEvents] = useState<any[]>([]);
-  // let myEvent: any[] = [];
+  const [authorizeButton, setAuthorizeButton] = useState("");
+  const [signoutButton, setSignoutButton] = useState("");
 
   /**
    *  On load, called to load the auth2 library and API client library.
@@ -70,7 +69,40 @@ const ConnectPage = () => {
    *  Sign in the user upon button click.
    */
   function handleAuthClick(event: any) {
-    gapi.auth2.getAuthInstance().signIn();
+    // Granting access when the user is offline
+    gapi.auth2
+      .getAuthInstance()
+      .grantOfflineAccess()
+      .then(function (response: any) {
+        gapi.auth2.getAuthInstance().signIn();
+        if (response["code"]) {
+          // Hide the sign-in button now that the user is authorized, for example:
+          setAuthorizeButton("none");
+          //$("#signinButton").attr("style", "display: none");
+          console.log(response);
+
+          // Send the code to the server
+          // getter.ajax({
+          //   type: "POST",
+          //   url: "http://example.com/storeauthcode",
+          //   // Always include an `X-Requested-With` header in every AJAX request,
+          //   // to protect against CSRF attacks.
+          //   headers: {
+          //     "X-Requested-With": "XMLHttpRequest",
+          //   },
+          //   contentType: "application/octet-stream; charset=utf-8",
+          //   success: function (result: any) {
+          //     // Handle or verify the server response.
+          //   },
+          //   processData: false,
+          //   data: response["code"],
+          // });
+        } else {
+          // THERE WAS AN ERROR
+          console.log("THERE WAS AN ERROR");
+        }
+      });
+    //gapi.auth2.getAuthInstance().signIn();
   }
 
   /**
@@ -87,8 +119,8 @@ const ConnectPage = () => {
    */
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
-      //authorizeButton.style.display = "none";
-      //signoutButton.style.display = "block";
+      setAuthorizeButton("none");
+      setSignoutButton("block");
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -97,6 +129,27 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getName()
       );
+      setFname(
+        gapi.auth2
+          .getAuthInstance()
+          .currentUser.get()
+          .getBasicProfile()
+          .getGivenName()
+      );
+      setLname(
+        gapi.auth2
+          .getAuthInstance()
+          .currentUser.get()
+          .getBasicProfile()
+          .getFamilyName()
+      );
+      setEmail(
+        gapi.auth2
+          .getAuthInstance()
+          .currentUser.get()
+          .getBasicProfile()
+          .getEmail()
+      );
       setPicUrl(
         gapi.auth2
           .getAuthInstance()
@@ -104,6 +157,9 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
+      console.log(email);
+      console.log(fname);
+      console.log(lname);
       listUpcomingEvents();
       console.log("SIGNED IN");
     } else {
@@ -111,8 +167,11 @@ const ConnectPage = () => {
       setIsSigned(false);
       setName("");
       setPicUrl("");
-      //authorizeButton.style.display = "block";
-      //signoutButton.style.display = "none";
+      setFname("");
+      setLname("");
+      setEmail("");
+      setAuthorizeButton("block");
+      setSignoutButton("none");
     }
   }
 
@@ -207,11 +266,15 @@ const ConnectPage = () => {
         <button
           id="authorize_button"
           onClick={handleAuthClick}
-          style={{ marginRight: "1rem" }}
+          style={{ display: authorizeButton }}
         >
           Sign in
         </button>
-        <button id="signout_button" onClick={handleSignoutClick}>
+        <button
+          id="signout_button"
+          onClick={handleSignoutClick}
+          style={{ display: signoutButton }}
+        >
           Sign Out
         </button>
       </div>
