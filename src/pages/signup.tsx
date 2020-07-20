@@ -88,6 +88,12 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
+  function handleSubmit(e: any) {
+    e.preventDefault();
+    let main = startDate;
+    console.log(main);
+  }
+
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { id: urlId.urlid },
@@ -98,16 +104,21 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     ) : error ? (
       <div>An Error occurred: {error}</div>
     ) : (
-      <div>
-        <DatePicker
-          showTimeSelect
-          selected={startDate}
-          onChange={(date) => setStartDate(date)}
-          timeClassName={handleColor}
-          timeFormat="HH:mm"
-          timeIntervals={data.link.duration}
-          inline
-        />
+      <div className="form-group">
+        <form onSubmit={handleSubmit}>
+          <DatePicker
+            showTimeSelect
+            selected={startDate}
+            onChange={(date) => setStartDate(date)}
+            timeClassName={handleColor}
+            timeFormat="HH:mm"
+            timeIntervals={data.link.duration}
+            inline
+          />
+          <div className="form-group">
+            <button className="btn btn-primary">Select Date</button>
+          </div>
+        </form>
       </div>
     );
   }
@@ -117,10 +128,13 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   return (
     <ApolloProvider client={client}>
       <SignUpServer />
-      <IntervalSetup />
+
       <CalendarCard>
-        <MyCalendar myList={temp} />
+        <IntervalSetup />
       </CalendarCard>
+      {/* <CalendarCard>
+        <MyCalendar myList={temp} />
+      </CalendarCard> */}
     </ApolloProvider>
   );
 };
