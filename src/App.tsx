@@ -36,7 +36,11 @@ class App extends Component {
           <Route exact path="/signup/:id" component={SignUpPage} />
           <Route exact path="/server" component={Server} />
           <Route exact path="/connect" component={ConnectPage} />
-          <Route exact path="/submit-info" component={SubmitInfoPage} />
+          <Route
+            exact
+            path="/submit-info/:id/:time"
+            component={SubmitInfoPage}
+          />
           <Route exact path="/confirmation" component={ConfirmationPage} />
           {/*Check for link in server. if exists go to  SchedulePage -> userid*/}
           <Redirect to="/404" />
