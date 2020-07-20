@@ -9,6 +9,8 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
 
+//npm install --save-dev @types/gapi
+
 const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   // let isSigned: boolean = false;
