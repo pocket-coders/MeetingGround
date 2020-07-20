@@ -1,5 +1,5 @@
 /*users.jsx*/
-import React from "react"; //, { Component, useState }
+import React, { useState } from "react"; //, { Component, useState }
 //You have to use the link component to link between you pages
 import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
@@ -12,6 +12,10 @@ import { ApolloProvider } from "react-apollo";
 import MyCalendar from "./Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+
+import DatePicker from "react-datepicker";
+//yarn add react-datepicker
+import "react-datepicker/dist/react-datepicker.css";
 
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -57,15 +61,34 @@ const CalendarCard = styled.div`
 `;
 const temp: any[] = [];
 
+// let handleChange = (date: any) => {
+//   this.setState({
+//     startDate: date,
+//   });
+// };
+
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
 ) => {
   const id = props.match.params.id;
   urlId.urlid = id;
 
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+
+  let handleColor = (time: any) => {
+    return time.getHours() > 12 ? "text-success" : "text-error";
+  };
+
   return (
     <ApolloProvider client={client}>
       <SignUpServer />
+      <DatePicker
+        showTimeSelect
+        selected={startDate}
+        onChange={(date) => setStartDate(date)}
+        timeClassName={handleColor}
+        inline
+      />
       <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard>
