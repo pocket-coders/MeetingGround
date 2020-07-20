@@ -21,6 +21,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       firstName: "",
       lastName: "",
       email: "",
+      comments: "",
     },
   });
 
@@ -55,6 +56,11 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
         <label>
           Email
           <input name="email" ref={register} />
+        </label>
+
+        <label>
+          Comments/Questions?
+          <input name="comments" ref={register} />
         </label>
 
         <div className="form-group">
