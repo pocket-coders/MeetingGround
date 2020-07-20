@@ -2103,6 +2103,14 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.3.tgz#7ee330ba7caafb98090bece86a5ee44115904c2c"
   integrity sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
 
+"@types/react-big-calendar@^0.24.3":
+  version "0.24.3"
+  resolved "https://registry.yarnpkg.com/@types/react-big-calendar/-/react-big-calendar-0.24.3.tgz#a66d602432c2f0e890ee5004771031a735529328"
+  integrity sha512-YPxhPeimpkXt3J0gk05a9GRiCZN+jYgi/lpazVG7FVk7/JRa8RZX3SmV/+zzCN6rqbdnB9gg1I9Px4JVX8A35Q==
+  dependencies:
+    "@types/prop-types" "*"
+    "@types/react" "*"
+
 "@types/react-bootstrap@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/react-bootstrap/-/react-bootstrap-1.0.1.tgz#3badd512fc37913b5e72f1ed94e3aacbd1452d97"
