@@ -190,7 +190,7 @@ const ConnectPage = () => {
   const CalendarCard = styled.div`
     margin: 0 auto;
     width: 1000px;
-    height: 1000px;
+    height: 800px;
     align-items: center;
     border-radius: 15px;
   `;
@@ -281,10 +281,11 @@ const ConnectPage = () => {
     background: white;
     display: flex;
     flex-direction: column;
+    height: 1000px;
   `;
 
   return (
-    <body style={{ background: "rgba(85, 172, 180)" }}>
+    <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
           <LogoCard
@@ -338,21 +339,43 @@ const ConnectPage = () => {
           </button>
         </TopFormat>
 
+        {!isSigned && (
+          <TopFormat>
+            <WelcomeFormat>
+              <h1>HELLO!</h1>
+
+              <h3> Please sign in to use Meeting Ground</h3>
+            </WelcomeFormat>
+          </TopFormat>
+        )}
+
         {isSigned && (
           <TopFormat>
             <WelcomeFormat>
-              <h1>Welcome {name}</h1>
+              <h1
+                style={{
+                  margin: 25,
+                }}
+              >
+                Welcome {name}
+              </h1>
               <img src={picUrl} alt="Avatar." />
               <p>
                 <a id="continue" href="http://localhost:3000/home">
                   continue to Meeting Ground
                 </a>
               </p>
+              <h3>Your upcoming events: </h3>
+              <pre
+                id="content"
+                style={{
+                  height: 100,
+                }}
+              ></pre>
+              <CalendarCard>
+                <MyCalendar myList={myEvents} />
+              </CalendarCard>
             </WelcomeFormat>
-            <pre id="content"></pre>
-            <CalendarCard>
-              <MyCalendar myList={myEvents} />
-            </CalendarCard>
           </TopFormat>
         )}
       </div>
