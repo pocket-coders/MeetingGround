@@ -120,7 +120,7 @@ const ConnectPage = () => {
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
       setAuthorizeButton("none");
-      setSignoutButton("block");
+      setSignoutButton("");
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -170,7 +170,7 @@ const ConnectPage = () => {
       setFname("");
       setLname("");
       setEmail("");
-      setAuthorizeButton("block");
+      setAuthorizeButton("");
       setSignoutButton("none");
     }
   }
@@ -254,49 +254,109 @@ const ConnectPage = () => {
 
   // handleClientLoad();
 
-  return (
-    <div style={{ padding: "1rem" }}>
-      <div>
-        <img id="logo" src="./logo.png" alt="Meeting Ground Logo" />
-        <h1>Welcome to Meeting Ground</h1>
-        <h2>Where Meetings hit the Ground</h2>
-        <small>Main Page</small>
-      </div>
-      <div>
-        <button
-          id="authorize_button"
-          onClick={handleAuthClick}
-          style={{ display: authorizeButton }}
-        >
-          Sign in
-        </button>
-        <button
-          id="signout_button"
-          onClick={handleSignoutClick}
-          style={{ display: signoutButton }}
-        >
-          Sign Out
-        </button>
-      </div>
+  const LogoCard = styled.img`
+    width: 450px;
+    height: 100px;
+    justify-content: space-around;
+    float: left;
+    // text-align: center;
+    // resizemode: "contain";
+    // left: 50%;
+    // transform: translate(-50%, -50%);
+  `;
 
-      {isSigned && (
-        <div>
-          <div>
-            <h1>Welcome {name}</h1>
-            <img src={picUrl} alt="Avatar." />
-            <p>
-              <a id="continue" href="http://localhost:3000/home">
-                continue to Meeting Ground
-              </a>
-            </p>
-          </div>
-          <pre id="content"></pre>
-          <CalendarCard>
-            <MyCalendar myList={myEvents} />
-          </CalendarCard>
-        </div>
-      )}
-    </div>
+  const TopFormat = styled.div`
+    margin: 0 auto;
+    width: 100%;
+    overflow: auto;
+    display: inline-block;
+    background: white;
+    border-radius: 25px;
+  `;
+
+  const WelcomeFormat = styled.div`
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+  `;
+
+  return (
+    <body style={{ background: "rgba(85, 172, 180)" }}>
+      <div style={{ padding: "1rem" }}>
+        <TopFormat>
+          <LogoCard
+            id="logo"
+            src="./img/meetingGroundLogo.png"
+            alt="Meeting Ground Logo"
+          />
+
+          <h1
+            style={{
+              position: "relative",
+              width: 200,
+              margin: 0,
+              float: "left",
+              left: "15%",
+              top: 20,
+            }}
+          >
+            Main Page
+          </h1>
+
+          <button
+            className="btn btn-primary"
+            id="authorize_button"
+            onClick={handleAuthClick}
+            style={{
+              height: "30%",
+              justifyContent: "center",
+              alignSelf: "center",
+              display: authorizeButton,
+              float: "right",
+              margin: 30,
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            className="btn btn-danger"
+            id="signout_button"
+            onClick={handleSignoutClick}
+            style={{
+              height: "30%",
+              justifyContent: "center",
+              alignContent: "center",
+              display: signoutButton,
+              float: "right",
+              margin: 30,
+            }}
+          >
+            Sign Out
+          </button>
+        </TopFormat>
+
+        {isSigned && (
+          <TopFormat>
+            <WelcomeFormat>
+              <h1>Welcome {name}</h1>
+              <img src={picUrl} alt="Avatar." />
+              <p>
+                <a id="continue" href="http://localhost:3000/home">
+                  continue to Meeting Ground
+                </a>
+              </p>
+            </WelcomeFormat>
+            <pre id="content"></pre>
+            <CalendarCard>
+              <MyCalendar myList={myEvents} />
+            </CalendarCard>
+          </TopFormat>
+        )}
+      </div>
+    </body>
   );
 };
 export default ConnectPage;
