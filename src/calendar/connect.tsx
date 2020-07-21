@@ -6,6 +6,9 @@ import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 // const getter = require("express");
 
+import logo from "../pages/img/meetingGroundLogo.png";
+import { Link } from "react-router-dom";
+
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
@@ -120,7 +123,7 @@ const ConnectPage = () => {
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
       setAuthorizeButton("none");
-      setSignoutButton("block");
+      setSignoutButton("");
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -170,7 +173,7 @@ const ConnectPage = () => {
       setFname("");
       setLname("");
       setEmail("");
-      setAuthorizeButton("block");
+      setAuthorizeButton("");
       setSignoutButton("none");
     }
   }
@@ -190,7 +193,7 @@ const ConnectPage = () => {
   const CalendarCard = styled.div`
     margin: 0 auto;
     width: 1000px;
-    height: 1000px;
+    height: 800px;
     align-items: center;
     border-radius: 15px;
   `;
@@ -254,49 +257,132 @@ const ConnectPage = () => {
 
   // handleClientLoad();
 
-  return (
-    <div style={{ padding: "1rem" }}>
-      <div>
-        <img id="logo" src="./logo.png" alt="Meeting Ground Logo" />
-        <h1>Welcome to Meeting Ground</h1>
-        <h2>Where Meetings hit the Ground</h2>
-        <small>Main Page</small>
-      </div>
-      <div>
-        <button
-          id="authorize_button"
-          onClick={handleAuthClick}
-          style={{ display: authorizeButton }}
-        >
-          Sign in
-        </button>
-        <button
-          id="signout_button"
-          onClick={handleSignoutClick}
-          style={{ display: signoutButton }}
-        >
-          Sign Out
-        </button>
-      </div>
+  const LogoCard = styled.img`
+    width: 450px;
+    height: 100px;
+    justify-content: space-around;
+    float: left;
+    // text-align: center;
+    // resizemode: "contain";
+    // left: 50%;
+    // transform: translate(-50%, -50%);
+  `;
 
-      {isSigned && (
-        <div>
-          <div>
-            <h1>Welcome {name}</h1>
-            <img src={picUrl} alt="Avatar." />
-            <p>
-              <a id="continue" href="http://localhost:3000/home">
-                continue to Meeting Ground
-              </a>
-            </p>
-          </div>
-          <pre id="content"></pre>
-          <CalendarCard>
-            <MyCalendar myList={myEvents} />
-          </CalendarCard>
-        </div>
-      )}
-    </div>
+  const TopFormat = styled.div`
+    margin: 0 auto;
+    width: 100%;
+    overflow: auto;
+    display: inline-block;
+    background: white;
+    border-radius: 25px;
+  `;
+
+  const WelcomeFormat = styled.div`
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 1000px;
+  `;
+
+  return (
+    <body style={{ background: "rgba(131, 196, 197)" }}>
+      <div style={{ padding: "1rem" }}>
+        <TopFormat>
+          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+
+          <h1
+            style={{
+              position: "relative",
+              width: 200,
+              margin: 0,
+              float: "left",
+              left: "15%",
+              top: 20,
+            }}
+          >
+            Main Page
+          </h1>
+
+          <button
+            className="btn btn-primary"
+            id="authorize_button"
+            onClick={handleAuthClick}
+            style={{
+              height: "30%",
+              justifyContent: "center",
+              alignSelf: "center",
+              display: authorizeButton,
+              float: "right",
+              margin: 30,
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            className="btn btn-danger"
+            id="signout_button"
+            onClick={handleSignoutClick}
+            style={{
+              height: "30%",
+              justifyContent: "center",
+              alignContent: "center",
+              display: signoutButton,
+              float: "right",
+              margin: 30,
+            }}
+          >
+            Sign Out
+          </button>
+        </TopFormat>
+
+        {!isSigned && (
+          <TopFormat>
+            <WelcomeFormat>
+              <h1>HELLO!</h1>
+
+              <h3> Please sign in to use Meeting Ground</h3>
+            </WelcomeFormat>
+          </TopFormat>
+        )}
+
+        {isSigned && (
+          <TopFormat>
+            <WelcomeFormat>
+              <h1
+                style={{
+                  margin: 25,
+                }}
+              >
+                Welcome {name}
+              </h1>
+              <img src={picUrl} alt="Avatar." />
+              <div
+                style={{ margin: 20, display: "flex", flexDirection: "column" }}
+              >
+                <h3> Your meeting has been confirmed!</h3>
+
+                <Link to="/home" className="btn btn-success" type="button">
+                  Continue to Meeting Ground Home
+                </Link>
+              </div>
+              <h3>Your upcoming events: </h3>
+              <pre
+                id="content"
+                style={{
+                  height: 100,
+                }}
+              ></pre>
+              <CalendarCard>
+                <MyCalendar myList={myEvents} />
+              </CalendarCard>
+            </WelcomeFormat>
+          </TopFormat>
+        )}
+      </div>
+    </body>
   );
 };
 export default ConnectPage;

@@ -41,24 +41,26 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   const ScheduleEnginePack = styled.div`
     display: flex;
     flex-direction: column;
-    margin-left: 20px;
-    margin-top: 10px;
+    border-radius: 25px;
+    margin: 25px;
     text-align: center;
-  `;
-
-  const inputUrl = styled.input`
-    display: flex;
-    flex-direction: column;
-    margin-left: 20px;
-    margin-top: 10px;
+    background: rgba(225, 235, 237);
+    height: 200px;
+    width: 250px;
   `;
 
   return (
     <ScheduleEnginePack>
       <ScheduleCard timeLength={timeLength} />
-      <form>
+      <form style={{ margin: 15 }}>
         <input id="random_url" value={url} />
-        <button onClick={(e) => handleGenerate(e)}>Generate Link</button>
+        <button
+          onClick={(e) => handleGenerate(e)}
+          type="button"
+          className="btn btn-secondary"
+        >
+          Generate Link
+        </button>
       </form>
     </ScheduleEnginePack>
   );
