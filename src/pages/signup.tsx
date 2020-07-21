@@ -21,6 +21,8 @@ import setSeconds from "date-fns/setSeconds";
 import setMinutes from "date-fns/setMinutes";
 import setHours from "date-fns/setHours";
 
+import logo from "./img/meetingGroundLogo.png";
+
 import Redirect, { withRouter } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -70,6 +72,34 @@ const CalendarCard = styled.div`
   align-items: center;
   border-radius: 15px;
 `;
+
+const LogoCard = styled.img`
+  width: 450px;
+  height: 100px;
+  justify-content: space-around;
+  float: left;
+`;
+
+const TopFormat = styled.div`
+  margin: 0 auto;
+  width: 100%;
+  overflow: auto;
+  display: inline-block;
+  background: white;
+  border-radius: 25px;
+`;
+
+const MainBodyFormat = styled.div`
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  height: 650px;
+  border-radius: 25px;
+`;
+
 const temp: any[] = [];
 let interval: number;
 
@@ -142,48 +172,92 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     ) : error ? (
       <div>An Error occurred: {error}</div>
     ) : (
-      <div className="form-group">
-        <form onSubmit={handleSubmit}>
-          <DatePicker
-            // showTimeSelect
-            selected={startDate}
-            onChange={(date: Date) => {
-              setStartDate(date);
-              let key =
-                date.getFullYear().toString() +
-                "-" +
-                date.getMonth().toString() +
-                "-" +
-                date.getDate().toString();
-              console.log("mykey: " + key);
-              setExcludeTimeList(excludeTimeDictionary[key]);
-              //excludeTimeList = excludeTimeDictionary[key];
-              console.log(excludeTimeList);
-              setSelect(true);
-            }}
-            timeFormat="HH:mm"
-            timeIntervals={data.link.duration}
-            inline
-          />
-          {selectTime && (
-            <DatePicker
-              showTimeSelect
-              showTimeSelectOnly
-              selected={startTime}
-              onChange={(date: Date) => setStartTime(date)}
-              timeFormat="HH:mm"
-              timeIntervals={data.link.duration}
-              excludeTimes={excludeTimeList}
-              inline
-            />
-          )}
-          <div className="form-group">
-            <button type="submit" className="btn btn-primary">
-              Select Date
+      <body style={{ background: "rgba(131, 196, 197)" }}>
+        <div style={{ padding: "1rem" }}>
+          <TopFormat>
+            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+
+            <h1
+              style={{
+                position: "relative",
+                width: 300,
+                margin: 0,
+                float: "left",
+                left: "15%",
+                top: 20,
+              }}
+            >
+              Signup Page
+            </h1>
+
+            <button
+              className="btn btn-danger"
+              id="signout_button"
+              //onClick={handleSignoutClick}
+              style={{
+                height: "30%",
+                justifyContent: "center",
+                alignContent: "center",
+                float: "right",
+                margin: 30,
+              }}
+            >
+              Sign Out
             </button>
-          </div>
-        </form>
-      </div>
+          </TopFormat>
+
+          <MainBodyFormat>
+            <div className="form-group">
+              <form onSubmit={handleSubmit}>
+                <div
+                  className="form-group"
+                  style={{ display: "flex", flexDirection: "row" }}
+                >
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date: Date) => {
+                      setStartDate(date);
+                      let key =
+                        date.getFullYear().toString() +
+                        "-" +
+                        date.getMonth().toString() +
+                        "-" +
+                        date.getDate().toString();
+                      console.log("mykey: " + key);
+                      setExcludeTimeList(excludeTimeDictionary[key]);
+                      console.log(excludeTimeList);
+                      setSelect(true);
+                    }}
+                    timeFormat="HH:mm"
+                    timeIntervals={data.link.duration}
+                    inline
+                  />
+                  {selectTime && (
+                    <DatePicker
+                      showTimeSelect
+                      showTimeSelectOnly
+                      selected={startTime}
+                      onChange={(date: Date) => setStartTime(date)}
+                      timeFormat="HH:mm"
+                      timeIntervals={data.link.duration}
+                      excludeTimes={excludeTimeList}
+                      inline
+                    />
+                  )}
+                </div>
+                <div
+                  className="form-group"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <button type="submit" className="btn btn-primary">
+                    Select Date
+                  </button>
+                </div>
+              </form>
+            </div>
+          </MainBodyFormat>
+        </div>
+      </body>
     );
   }
 
@@ -191,11 +265,9 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   return (
     <ApolloProvider client={client}>
-      <SignUpServer />
+      {/* <SignUpServer /> */}
 
-      <CalendarCard>
-        <IntervalSetup />
-      </CalendarCard>
+      <IntervalSetup />
       {/* <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard> */}

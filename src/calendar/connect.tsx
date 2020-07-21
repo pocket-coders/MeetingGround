@@ -6,6 +6,9 @@ import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 // const getter = require("express");
 
+import logo from "../pages/img/meetingGroundLogo.png";
+import { Link } from "react-router-dom";
+
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
@@ -288,11 +291,7 @@ const ConnectPage = () => {
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
-          <LogoCard
-            id="logo"
-            src="./img/meetingGroundLogo.png"
-            alt="Meeting Ground Logo"
-          />
+          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
           <h1
             style={{
@@ -360,11 +359,15 @@ const ConnectPage = () => {
                 Welcome {name}
               </h1>
               <img src={picUrl} alt="Avatar." />
-              <p>
-                <a id="continue" href="http://localhost:3000/home">
-                  continue to Meeting Ground
-                </a>
-              </p>
+              <div
+                style={{ margin: 20, display: "flex", flexDirection: "column" }}
+              >
+                <h3> Your meeting has been confirmed!</h3>
+
+                <Link to="/home" className="btn btn-success" type="button">
+                  Continue to Meeting Ground Home
+                </Link>
+              </div>
               <h3>Your upcoming events: </h3>
               <pre
                 id="content"

@@ -46,7 +46,7 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
     text-align: center;
     background: rgba(225, 235, 237);
     height: 200px;
-    width: 300px;
+    width: 250px;
   `;
 
   return (
@@ -54,7 +54,13 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
       <ScheduleCard timeLength={timeLength} />
       <form style={{ margin: 15 }}>
         <input id="random_url" value={url} />
-        <button onClick={(e) => handleGenerate(e)}>Generate Link</button>
+        <button
+          onClick={(e) => handleGenerate(e)}
+          type="button"
+          className="btn btn-secondary"
+        >
+          Generate Link
+        </button>
       </form>
     </ScheduleEnginePack>
   );

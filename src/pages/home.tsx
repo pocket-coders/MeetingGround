@@ -3,6 +3,8 @@ import React from "react";
 import ScheduleEngine from "./ScheduleEngine";
 import styled from "@emotion/styled";
 
+import logo from "./img/meetingGroundLogo.png";
+
 const HomeDiv = styled.div`
   display: flex;
   flex-direction: row;
@@ -45,11 +47,7 @@ const HomePage = () => {
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
-          <LogoCard
-            id="logo"
-            src="./img/meetingGroundLogo.png"
-            alt="Meeting Ground Logo"
-          />
+          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
           <h1
             style={{
