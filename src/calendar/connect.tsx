@@ -277,7 +277,7 @@ const ConnectPage = () => {
     border-radius: 25px;
   `;
 
-  const WelcomeFormat = styled.div`
+  const HomePageFormat = styled.div`
     margin: 0 auto;
     align-items: center;
     justify-content: center;
@@ -285,6 +285,18 @@ const ConnectPage = () => {
     display: flex;
     flex-direction: column;
     height: 1000px;
+    text-align: center;
+  `;
+
+  const WelcomeFormat = styled.div`
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 650px;
+    text-align: center;
   `;
 
   return (
@@ -341,16 +353,18 @@ const ConnectPage = () => {
         {!isSigned && (
           <TopFormat>
             <WelcomeFormat>
-              <h1>HELLO!</h1>
+              <div>
+                <h1>HELLO!</h1>
 
-              <h3> Please sign in to use Meeting Ground</h3>
+                <h3> Please sign in to use Meeting Ground</h3>
+              </div>
             </WelcomeFormat>
           </TopFormat>
         )}
 
         {isSigned && (
           <TopFormat>
-            <WelcomeFormat>
+            <HomePageFormat>
               <h1
                 style={{
                   margin: 25,
@@ -362,7 +376,7 @@ const ConnectPage = () => {
               <div
                 style={{ margin: 20, display: "flex", flexDirection: "column" }}
               >
-                <h3> Your meeting has been confirmed!</h3>
+                {/* <h3> Your meeting has been confirmed!</h3> */}
 
                 <Link to="/home" className="btn btn-success" type="button">
                   Continue to Meeting Ground Home
@@ -378,7 +392,7 @@ const ConnectPage = () => {
               <CalendarCard>
                 <MyCalendar myList={myEvents} />
               </CalendarCard>
-            </WelcomeFormat>
+            </HomePageFormat>
           </TopFormat>
         )}
       </div>

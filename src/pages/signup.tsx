@@ -83,10 +83,13 @@ const LogoCard = styled.img`
 const TopFormat = styled.div`
   margin: 0 auto;
   width: 100%;
-  overflow: auto;
-  display: inline-block;
+  //display: inline-block;
   background: white;
   border-radius: 25px;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+  overflow: hidden;
 `;
 
 const MainBodyFormat = styled.div`
@@ -183,30 +186,19 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
                 width: 300,
                 margin: 0,
                 float: "left",
-                left: "15%",
+                left: "12%",
                 top: 20,
               }}
             >
               Signup Page
             </h1>
-
-            <button
-              className="btn btn-danger"
-              id="signout_button"
-              //onClick={handleSignoutClick}
-              style={{
-                height: "30%",
-                justifyContent: "center",
-                alignContent: "center",
-                float: "right",
-                margin: 30,
-              }}
-            >
-              Sign Out
-            </button>
           </TopFormat>
 
           <MainBodyFormat>
+            <h1 style={{ top: 10, margin: 20 }}>
+              Sign up for your {data.link.duration} minute meeting.
+            </h1>
+            <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
             <div className="form-group">
               <form onSubmit={handleSubmit}>
                 <div
