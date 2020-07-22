@@ -95,21 +95,6 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
           >
             Info Page
           </h1>
-
-          <button
-            className="btn btn-danger"
-            id="signout_button"
-            //onClick={handleSignoutClick}
-            style={{
-              height: "30%",
-              justifyContent: "center",
-              alignContent: "center",
-              float: "right",
-              margin: 30,
-            }}
-          >
-            Sign Out
-          </button>
         </TopFormat>
         <MainBodyFormat>
           <h3 style={{ margin: 20 }}>

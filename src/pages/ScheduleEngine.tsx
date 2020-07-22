@@ -18,7 +18,7 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   function makeid(length: number) {
     var result = "";
     var characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#@$&*";
     var charactersLength = characters.length;
     for (var i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -26,7 +26,7 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
     return result;
   }
   const getUrl = async () => {
-    const tempId = "meetingground.com/" + makeid(16);
+    const tempId = "meetingground.com/signup/" + makeid(16);
     setUrl(tempId);
     // setUrl({
     //   url: tempId,
