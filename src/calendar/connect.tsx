@@ -17,7 +17,7 @@ const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
-  const [access_token, setAccessToken] = useState("");
+  const [accesstoken, setAccessToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
@@ -390,7 +390,7 @@ const ConnectPage = () => {
               >
                 Welcome {name}
               </h1>
-              {/* <h3> {access_token} </h3> */}
+              <h3> {accesstoken} </h3>
               <img src={picUrl} alt="Avatar." />
               <div
                 style={{ margin: 20, display: "flex", flexDirection: "column" }}
