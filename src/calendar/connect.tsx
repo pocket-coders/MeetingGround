@@ -5,9 +5,12 @@ import MyCalendar from "../pages/Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 // const getter = require("express");
+<<<<<<< HEAD
 
 import logo from "../pages/img/meetingGroundLogo.png";
 import { Link } from "react-router-dom";
+=======
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
 
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
@@ -17,6 +20,11 @@ const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
+<<<<<<< HEAD
+=======
+  const [access_token, setAccessToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
@@ -78,6 +86,10 @@ const ConnectPage = () => {
       .grantOfflineAccess()
       .then(function (response: any) {
         gapi.auth2.getAuthInstance().signIn();
+<<<<<<< HEAD
+=======
+        setRefreshToken(response.code);
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
         if (response["code"]) {
           // Hide the sign-in button now that the user is authorized, for example:
           setAuthorizeButton("none");
@@ -123,7 +135,15 @@ const ConnectPage = () => {
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
       setAuthorizeButton("none");
+<<<<<<< HEAD
       setSignoutButton("");
+=======
+      setSignoutButton("block");
+      setAccessToken(
+        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+          .access_token
+      );
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -173,7 +193,11 @@ const ConnectPage = () => {
       setFname("");
       setLname("");
       setEmail("");
+<<<<<<< HEAD
       setAuthorizeButton("");
+=======
+      setAuthorizeButton("block");
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
       setSignoutButton("none");
     }
   }
@@ -216,15 +240,23 @@ const ConnectPage = () => {
       .then(function (response: any) {
         const events: any[] = response.result.items;
         const appointments = response.result.items;
-        for (let j = 0; j < appointments.length; j++) {
-          appointments[j].start = moment
-            .utc(appointments[j].start.dateTime)
-            .toDate();
-          appointments[j].end = moment
-            .utc(appointments[j].end.dateTime)
-            .toDate();
+        if (appointments.length > 0) {
+          for (let j = 0; j < appointments.length; j++) {
+            appointments[j].start = moment
+              .utc(appointments[j].start.dateTime)
+              .toDate();
+            appointments[j].end = moment
+              .utc(appointments[j].end.dateTime)
+              .toDate();
+            // appointments[j].start = moment
+            //   .utc(appointments[j].end.dateTime)
+            //   .toDate();
+            // appointments[j].end = moment
+            //   .utc(appointments[j].start.dateTime)
+            //   .toDate();
+          }
+          setMyEvents(appointments);
         }
-        setMyEvents(appointments);
 
         //setMyEvents(events);
         // debugger;
@@ -300,6 +332,7 @@ const ConnectPage = () => {
   `;
 
   return (
+<<<<<<< HEAD
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
@@ -317,6 +350,31 @@ const ConnectPage = () => {
           >
             Main Page
           </h1>
+=======
+    <div style={{ padding: "1rem" }}>
+      <div>
+        <img id="logo" src="./logo.png" alt="Meeting Ground Logo" />
+        <h1>Welcome to Meeting Ground</h1>
+        <h2>Where Meetings hit the Ground</h2>
+        <small>Main Page</small>
+      </div>
+      <div>
+        <button
+          id="authorize_button"
+          onClick={handleAuthClick}
+          style={{ display: authorizeButton }}
+        >
+          Sign in
+        </button>
+        <button
+          id="signout_button"
+          onClick={handleSignoutClick}
+          style={{ display: signoutButton }}
+        >
+          Sign Out
+        </button>
+      </div>
+>>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
 
           <button
             className="btn btn-primary"
