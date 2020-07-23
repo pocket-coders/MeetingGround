@@ -16,7 +16,6 @@ import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
 import { HttpLink } from "apollo-link-http";
 import { ApolloProvider } from "react-apollo";
 import * as config from "../apiGoogleconfig.json";
-import { Console } from "console";
 import ScheduleCard from "./ScheduleCard/component";
 
 interface SubmitPagePropsInterface
@@ -160,7 +159,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
 
     gapi.client
       .init({
-        apiKey: config.config.clientId,
+        apiKey: config.config.apiKey,
         clientId: config.config.clientId,
         discoveryDocs: config.config.discoveryDocs,
         scope: config.config.scope,

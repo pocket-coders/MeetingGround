@@ -21,11 +21,8 @@ import setSeconds from "date-fns/setSeconds";
 import setMinutes from "date-fns/setMinutes";
 import setHours from "date-fns/setHours";
 
-<<<<<<< HEAD
 import logo from "./img/meetingGroundLogo.png";
 
-=======
->>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
 import Redirect, { withRouter } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -128,11 +125,8 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   const [startTime, setStartTime] = useState<Date>(
     setHours(setMinutes(new Date(), 30), 16)
   );
-<<<<<<< HEAD
   //const [interval, setInterval] = useState(45);
-=======
   const [userEmail, setUserEmail] = useState("");
->>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
@@ -153,25 +147,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   const [selectTime, setSelect] = useState(false);
   function handleSubmit(e: any) {
-<<<<<<< HEAD
-    e.preventDefault();
-
-    //result contains the selected time + date
-    let result = new Date();
-
-    result.setTime(startTime.getTime()); //note time includes the month/date/year
-    result.setDate(startDate.getDate());
-    result.setMonth(startDate.getMonth());
-    result.setFullYear(startDate.getFullYear());
-
-    let main = startDate;
-    console.log(main);
-
-    console.log("result is: " + result);
-
-    props.history.push("/submit-info/" + id + "/" + result.toString());
-    // return <Redirect to="/404" />;
-=======
     if (!selectTime) {
       window.alert("Date is not selected");
     } else {
@@ -193,7 +168,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       props.history.push("/submit-info/" + id + "/" + result.toString());
       // return <Redirect to="/404" />;
     }
->>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
   }
 
   function IntervalSetup() {
@@ -206,7 +180,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     ) : error ? (
       <div>An Error occurred: {error}</div>
     ) : (
-<<<<<<< HEAD
       <body style={{ background: "rgba(131, 196, 197)" }}>
         <div style={{ padding: "1rem" }}>
           <TopFormat>
@@ -282,50 +255,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
           </MainBodyFormat>
         </div>
       </body>
-=======
-      <div className="form-group">
-        <form onSubmit={handleSubmit}>
-          <DatePicker
-            // showTimeSelect
-            selected={startDate}
-            onChange={(date: Date) => {
-              setStartDate(date);
-              let key =
-                date.getFullYear().toString() +
-                "-" +
-                date.getMonth().toString() +
-                "-" +
-                date.getDate().toString();
-              console.log("mykey: " + key);
-              setExcludeTimeList(excludeTimeDictionary[key]);
-              //excludeTimeList = excludeTimeDictionary[key];
-              console.log(excludeTimeList);
-              setSelect(true);
-            }}
-            timeFormat="HH:mm"
-            timeIntervals={data.link.duration}
-            inline
-          />
-          {selectTime && (
-            <DatePicker
-              showTimeSelect
-              showTimeSelectOnly
-              selected={startTime}
-              onChange={(date: Date) => setStartTime(date)}
-              timeFormat="HH:mm"
-              timeIntervals={data.link.duration}
-              excludeTimes={excludeTimeList}
-              inline
-            />
-          )}
-          <div className="form-group">
-            <button type="submit" className="btn btn-primary">
-              Select Date
-            </button>
-          </div>
-        </form>
-      </div>
->>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
     );
   }
 
@@ -333,17 +262,14 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   return (
     <ApolloProvider client={client}>
-<<<<<<< HEAD
       {/* <SignUpServer /> */}
 
       <IntervalSetup />
-=======
       <SignUpServer />
 
       <CalendarCard>
         <IntervalSetup />
       </CalendarCard>
->>>>>>> 5e290aad4694490d73463338b54ad183b1d639ee
       {/* <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard> */}
