@@ -104,6 +104,8 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     email: "",
   };
 
+  let accessToken: string;
+
   const onSubmit = (data: any) => {
     console.log(data);
     console.log(data.firstName);
@@ -156,7 +158,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     //   console.log('login complete');
     //   console.log(gapi.auth.getToken());
     // });
-
+    //
     gapi.client
       .init({
         apiKey: config.config.apiKey,
@@ -168,14 +170,21 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
         function () {
           // Listen for sign-in state changes.
           // gapi.auth2.authorize;
-          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-          updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+
+          // gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+          // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+          gapi.client.setToken({
+            access_token: accessToken,
+          });
         },
         function (error: any) {
           console.log("An errot in update");
           //appendPre(JSON.stringify(error, null, 2));
         }
-      );
+      )
+      .then(function () {
+        accessUserOffline();
+      });
   }
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {

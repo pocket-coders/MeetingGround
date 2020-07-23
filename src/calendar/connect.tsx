@@ -80,7 +80,12 @@ const ConnectPage = () => {
       .grantOfflineAccess()
       .then(function (response: any) {
         gapi.auth2.getAuthInstance().signIn();
+        setAccessToken(
+          gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+            .access_token
+        );
         setRefreshToken(response.code);
+
         if (response["code"]) {
           // Hide the sign-in button now that the user is authorized, for example:
           setAuthorizeButton("none");
@@ -128,10 +133,6 @@ const ConnectPage = () => {
       setAuthorizeButton("none");
       setSignoutButton("");
       //setSignoutButton("block");
-      setAccessToken(
-        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
-          .access_token
-      );
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -389,6 +390,7 @@ const ConnectPage = () => {
               >
                 Welcome {name}
               </h1>
+              {/* <h3> {access_token} </h3> */}
               <img src={picUrl} alt="Avatar." />
               <div
                 style={{ margin: 20, display: "flex", flexDirection: "column" }}
