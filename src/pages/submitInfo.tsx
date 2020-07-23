@@ -36,6 +36,9 @@ const TopFormat = styled.div`
   display: inline-block;
   background: white;
   border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
 `;
 
 const MainBodyFormat = styled.div`
@@ -271,18 +274,29 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
         <TopFormat>
           <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
-          <h1
+          <div
             style={{
-              position: "relative",
-              width: 300,
-              margin: 0,
-              float: "left",
-              left: "15%",
-              top: 20,
+              justifyContent: "center",
+              alignContent: "center",
+              display: "flex",
+              flexDirection: "row",
+              borderTop: "5px solid grey",
+              margin: 5,
             }}
           >
-            Info Page
-          </h1>
+            <h1
+              style={{
+                // position: "relative",
+                margin: 0,
+                // float: "left",
+                // left: "15%",
+                justifyContent: "center",
+                top: 20,
+              }}
+            >
+              Submit Info Page
+            </h1>
+          </div>
         </TopFormat>
         <MainBodyFormat>
           <h3 style={{ margin: 20 }}>

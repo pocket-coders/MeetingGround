@@ -293,6 +293,9 @@ const ConnectPage = () => {
     display: inline-block;
     background: white;
     border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
   `;
 
   const HomePageFormat = styled.div`
@@ -321,51 +324,64 @@ const ConnectPage = () => {
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
-          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+          <div>
+            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
-          <h1
+            <button
+              className="btn btn-primary"
+              id="authorize_button"
+              onClick={handleAuthClick}
+              style={{
+                height: "30%",
+                justifyContent: "center",
+                alignSelf: "center",
+                display: authorizeButton,
+                float: "right",
+                margin: 30,
+              }}
+            >
+              Sign in
+            </button>
+            <button
+              className="btn btn-danger"
+              id="signout_button"
+              onClick={handleSignoutClick}
+              style={{
+                height: "30%",
+                justifyContent: "center",
+                alignContent: "center",
+                display: signoutButton,
+                float: "right",
+                margin: 30,
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+          <div
             style={{
-              position: "relative",
-              width: 200,
-              margin: 0,
-              float: "left",
-              left: "15%",
-              top: 20,
-            }}
-          >
-            Main Page
-          </h1>
-
-          <button
-            className="btn btn-primary"
-            id="authorize_button"
-            onClick={handleAuthClick}
-            style={{
-              height: "30%",
-              justifyContent: "center",
-              alignSelf: "center",
-              display: authorizeButton,
-              float: "right",
-              margin: 30,
-            }}
-          >
-            Sign in
-          </button>
-          <button
-            className="btn btn-danger"
-            id="signout_button"
-            onClick={handleSignoutClick}
-            style={{
-              height: "30%",
               justifyContent: "center",
               alignContent: "center",
-              display: signoutButton,
-              float: "right",
-              margin: 30,
+              display: "flex",
+              flexDirection: "row",
+              borderTop: "5px solid grey",
+              margin: 5,
             }}
           >
-            Sign Out
-          </button>
+            <h1
+              style={{
+                // position: "relative",
+                //width: 200,
+                margin: 0,
+                // float: "left",
+                // left: "15%",
+                justifyContent: "center",
+                top: 20,
+              }}
+            >
+              Main Page
+            </h1>
+          </div>
         </TopFormat>
 
         {!isSigned && (
