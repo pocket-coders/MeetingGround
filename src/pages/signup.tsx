@@ -126,6 +126,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     setHours(setMinutes(new Date(), 30), 16)
   );
   //const [interval, setInterval] = useState(45);
+  const [userEmail, setUserEmail] = useState("");
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
@@ -146,23 +147,27 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   const [selectTime, setSelect] = useState(false);
   function handleSubmit(e: any) {
-    e.preventDefault();
+    if (!selectTime) {
+      window.alert("Date is not selected");
+    } else {
+      e.preventDefault();
 
-    //result contains the selected time + date
-    let result = new Date();
+      //result contains the selected time + date
+      let result = new Date();
 
-    result.setTime(startTime.getTime()); //note time includes the month/date/year
-    result.setDate(startDate.getDate());
-    result.setMonth(startDate.getMonth());
-    result.setFullYear(startDate.getFullYear());
+      result.setTime(startTime.getTime()); //note time includes the month/date/year
+      result.setDate(startDate.getDate());
+      result.setMonth(startDate.getMonth());
+      result.setFullYear(startDate.getFullYear());
 
-    let main = startDate;
-    console.log(main);
+      let main = startDate;
+      console.log(main);
 
-    console.log("result is: " + result);
+      console.log("result is: " + result);
 
-    props.history.push("/submit-info/" + id + "/" + result.toString());
-    // return <Redirect to="/404" />;
+      props.history.push("/submit-info/" + id + "/" + result.toString());
+      // return <Redirect to="/404" />;
+    }
   }
 
   function IntervalSetup() {
@@ -260,6 +265,11 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       {/* <SignUpServer /> */}
 
       <IntervalSetup />
+      <SignUpServer />
+
+      <CalendarCard>
+        <IntervalSetup />
+      </CalendarCard>
       {/* <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard> */}

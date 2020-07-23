@@ -17,6 +17,8 @@ const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
+  const [access_token, setAccessToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
@@ -78,6 +80,7 @@ const ConnectPage = () => {
       .grantOfflineAccess()
       .then(function (response: any) {
         gapi.auth2.getAuthInstance().signIn();
+        setRefreshToken(response.code);
         if (response["code"]) {
           // Hide the sign-in button now that the user is authorized, for example:
           setAuthorizeButton("none");
@@ -124,6 +127,11 @@ const ConnectPage = () => {
     if (isSignedIn) {
       setAuthorizeButton("none");
       setSignoutButton("");
+      //setSignoutButton("block");
+      setAccessToken(
+        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+          .access_token
+      );
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -174,6 +182,7 @@ const ConnectPage = () => {
       setLname("");
       setEmail("");
       setAuthorizeButton("");
+      //setAuthorizeButton("block");
       setSignoutButton("none");
     }
   }
@@ -216,15 +225,23 @@ const ConnectPage = () => {
       .then(function (response: any) {
         const events: any[] = response.result.items;
         const appointments = response.result.items;
-        for (let j = 0; j < appointments.length; j++) {
-          appointments[j].start = moment
-            .utc(appointments[j].start.dateTime)
-            .toDate();
-          appointments[j].end = moment
-            .utc(appointments[j].end.dateTime)
-            .toDate();
+        if (appointments.length > 0) {
+          for (let j = 0; j < appointments.length; j++) {
+            appointments[j].start = moment
+              .utc(appointments[j].start.dateTime)
+              .toDate();
+            appointments[j].end = moment
+              .utc(appointments[j].end.dateTime)
+              .toDate();
+            // appointments[j].start = moment
+            //   .utc(appointments[j].end.dateTime)
+            //   .toDate();
+            // appointments[j].end = moment
+            //   .utc(appointments[j].start.dateTime)
+            //   .toDate();
+          }
+          setMyEvents(appointments);
         }
-        setMyEvents(appointments);
 
         //setMyEvents(events);
         // debugger;
