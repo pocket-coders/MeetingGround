@@ -83,13 +83,13 @@ const LogoCard = styled.img`
 const TopFormat = styled.div`
   margin: 0 auto;
   width: 100%;
-  //display: inline-block;
+  overflow: auto;
+  display: inline-block;
   background: white;
   border-radius: 25px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   margin-bottom: 10px;
-  overflow: hidden;
 `;
 
 const MainBodyFormat = styled.div`
@@ -184,19 +184,29 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
         <div style={{ padding: "1rem" }}>
           <TopFormat>
             <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
-
-            <h1
+            <div
               style={{
-                position: "relative",
-                width: 300,
-                margin: 0,
-                float: "left",
-                left: "12%",
-                top: 20,
+                justifyContent: "center",
+                alignContent: "center",
+                display: "flex",
+                flexDirection: "row",
+                borderTop: "5px solid grey",
+                margin: 5,
               }}
             >
-              Signup Page
-            </h1>
+              <h1
+                style={{
+                  // position: "relative",
+                  margin: 0,
+                  // float: "left",
+                  // left: "15%",
+                  justifyContent: "center",
+                  top: 20,
+                }}
+              >
+                Signup Page
+              </h1>
+            </div>
           </TopFormat>
 
           <MainBodyFormat>
@@ -265,11 +275,10 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       {/* <SignUpServer /> */}
 
       <IntervalSetup />
-      <SignUpServer />
 
-      <CalendarCard>
+      {/* <CalendarCard>
         <IntervalSetup />
-      </CalendarCard>
+      </CalendarCard> */}
       {/* <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard> */}
