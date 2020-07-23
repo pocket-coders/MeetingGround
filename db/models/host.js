@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 var hostSchema = new Schema({
     Fname: String,
     Lname: String,
-    email: String
+    email: String,
+    GOA_code: String
 });
 module.exports = mongoose.model("host_cols", hostSchema);
 //making model (=collection) called 'host_col' and the

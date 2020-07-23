@@ -10,42 +10,52 @@ import {
   // Link,
   Redirect,
 } from "react-router-dom";
-
 //Pages
 import LoginPage from "./pages/login"; ///< index.jsx will be automatically imported
 //And render that route with the MainPage component for the root path /
-
 import HomePage from "./pages/home";
 import NotFoundPage from "./pages/404";
 import SignUpPage from "./pages/signup";
-import Server from "./server/server";
 import ConnectPage from "./calendar/connect";
 import SubmitInfoPage from "./pages/submitInfo";
 import ConfirmationPage from "./pages/confirmation";
+import { HttpLink } from "apollo-link-http";
+import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
+import { ApolloClient } from "apollo-client";
+import { ApolloProvider } from "react-apollo";
+
+const link = new HttpLink({
+  uri: "http://localhost:4001/graphql",
+});
+const cache = new InMemoryCache();
+
+const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
+  cache,
+  link,
+});
 
 class App extends Component {
   render() {
     return (
-      <Router>
-        {/*All our Routes goes here!*/}
-        <Switch>
-          <Route exact path="/" component={ConnectPage} />
-          <Route exact path="/login" component={ConnectPage} />
-          <Route exact path="/home" component={HomePage} />
-          <Route exact path="/404" component={NotFoundPage} />
-          <Route exact path="/signup/:id" component={SignUpPage} />
-          <Route exact path="/server" component={Server} />
-          <Route exact path="/connect" component={ConnectPage} />
-          <Route
-            exact
-            path="/submit-info/:id/:time"
-            component={SubmitInfoPage}
-          />
-          <Route exact path="/confirmation" component={ConfirmationPage} />
-          {/*Check for link in server. if exists go to  SchedulePage -> userid*/}
-          <Redirect to="/404" />
-        </Switch>
-      </Router>
+      <ApolloProvider client={client}>
+        <Router>
+          <Switch>
+            <Route exact path="/" component={ConnectPage} />
+            <Route exact path="/login" component={ConnectPage} />
+            <Route exact path="/home" component={HomePage} />
+            <Route exact path="/404" component={NotFoundPage} />
+            <Route exact path="/signup/:id" component={SignUpPage} />
+            <Route exact path="/connect" component={ConnectPage} />
+            <Route
+              exact
+              path="/submit-info/:id/:time"
+              component={SubmitInfoPage}
+            />
+            <Route exact path="/confirmation" component={ConfirmationPage} />
+            <Redirect to="/404" />
+          </Switch>
+        </Router>
+      </ApolloProvider>
     );
   }
 }

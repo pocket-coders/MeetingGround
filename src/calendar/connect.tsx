@@ -1,39 +1,68 @@
 import React, { useState, useEffect } from "react";
-import * as config from "../apiGoogleconfig.json";
+import { config } from "../apiGoogleconfig.json";
 import moment from "moment";
 import MyCalendar from "../pages/Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-// const getter = require("express");
+import { useMutation } from "react-apollo";
+import { gql } from "apollo-boost";
 
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
 
+const AppendHostToDB = gql`
+  mutation addHost(
+    $fname: String!
+    $lname: String!
+    $email: String!
+    $GOA_code: String!
+  ) {
+    addHost(Fname: $fname, Lname: $lname, email: $email, GOA_code: $GOA_code) {
+      Lname
+      email
+    }
+  }
+`;
+
 const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
-  const [email, setEmail] = useState("");
-  const [fname, setFname] = useState("");
-  const [lname, setLname] = useState("");
+  const [email, setEmail] = useState(""); //user email
+  const [fname, setFname] = useState(""); //user fname
+  const [lname, setLname] = useState(""); //user lname
+  const [GOA_code, setGOAcode] = useState(""); //user Google Offline Access code
   const [message, setMessage] = useState("");
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [authorizeButton, setAuthorizeButton] = useState("");
   const [signoutButton, setSignoutButton] = useState("");
+  const [mutate] = useMutation(AppendHostToDB);
 
-  /**
-   *  On load, called to load the auth2 library and API client library.
-   */
+  useEffect(() => {
+    async function addHostToDb() {
+      // GOA_code --> Google Offline Access code
+      const arg = await mutate({
+        variables: { GOA_code, fname, lname, email },
+      });
+      console.log(arg);
+    }
+    if (GOA_code && fname && lname && email) {
+      addHostToDb();
+    }
+  }, [GOA_code, fname, lname, email, mutate]);
+
+  //On load, called to load the auth2 library and API client library.
   useEffect(() => {
     gapi.load("client:auth2", initClient);
   }, []);
 
-  // --> [] call the function only one time at the beginning
-  // function handleClientLoad() {
-  //   gapi.load("client:auth2", initClient);
-  // }
-
+  /*
+  --> [] call the function only one time at the beginning
+  function handleClientLoad() {
+    gapi.load("client:auth2", initClient);
+  }
+*/
   /**
    *  Initializes the API client library and sets up sign-in state
    *  listeners.
@@ -41,10 +70,10 @@ const ConnectPage = () => {
   function initClient() {
     gapi.client
       .init({
-        apiKey: config.config.apiKey,
-        clientId: config.config.clientId,
-        discoveryDocs: config.config.discoveryDocs,
-        scope: config.config.scope,
+        apiKey: config.apiKey,
+        clientId: config.clientId,
+        discoveryDocs: config.discoveryDocs,
+        scope: config.scope,
       })
       .then(
         function () {
@@ -60,7 +89,7 @@ const ConnectPage = () => {
           // setMessage(JSON.stringify(error, null, 2));
           // const temp: string = JSON.stringify(error, null, 2);
           // message += temp;
-          appendPre(JSON.stringify(error, null, 2));
+          console.log(JSON.stringify(error, null, 2));
         }
       );
   }
@@ -75,30 +104,13 @@ const ConnectPage = () => {
       .grantOfflineAccess()
       .then(function (response: any) {
         gapi.auth2.getAuthInstance().signIn();
-        if (response["code"]) {
+        if (response.code) {
           // Hide the sign-in button now that the user is authorized, for example:
           setAuthorizeButton("none");
-          //$("#signinButton").attr("style", "display: none");
           console.log(response);
-
-          // Send the code to the server
-          // getter.ajax({
-          //   type: "POST",
-          //   url: "http://example.com/storeauthcode",
-          //   // Always include an `X-Requested-With` header in every AJAX request,
-          //   // to protect against CSRF attacks.
-          //   headers: {
-          //     "X-Requested-With": "XMLHttpRequest",
-          //   },
-          //   contentType: "application/octet-stream; charset=utf-8",
-          //   success: function (result: any) {
-          //     // Handle or verify the server response.
-          //   },
-          //   processData: false,
-          //   data: response["code"],
-          // });
+          setGOAcode(response.code);
+          console.log("After host added/found");
         } else {
-          // THERE WAS AN ERROR
           console.log("THERE WAS AN ERROR");
         }
       });
@@ -157,9 +169,6 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
-      console.log(email);
-      console.log(fname);
-      console.log(lname);
       listUpcomingEvents();
       console.log("SIGNED IN");
     } else {
@@ -173,18 +182,6 @@ const ConnectPage = () => {
       setAuthorizeButton("block");
       setSignoutButton("none");
     }
-  }
-
-  // /**
-  //  * Append a pre element to the body containing the given message
-  //  * as its text node. Used to display the results of the API call.
-  //  *
-  //  * @param {string} message Text to be placed in pre element.
-  //  */
-  function appendPre(message: string) {
-    const pre = document.getElementById("content") as HTMLElement;
-    const textContent = document.createTextNode(message + "\n");
-    pre.appendChild(textContent);
   }
 
   const CalendarCard = styled.div`
@@ -227,8 +224,7 @@ const ConnectPage = () => {
         // debugger;
         const tmp: string = message;
         setMessage(tmp + "Upcoming events:" + "\n");
-        // message += "Upcoming events:" + "\n";
-        appendPre("Upcoming events:");
+        console.log("Upcoming events:");
         console.log(events.length);
         if (events.length > 0) {
           let i: number;
@@ -242,17 +238,15 @@ const ConnectPage = () => {
               message + event.summary + " (" + when + ")" + "\n";
             setMessage(temp);
             // message += temp;
-            appendPre(event.summary + " (" + when + ")");
+            console.log(event.summary + " (" + when + ")");
           }
         } else {
           setMessage("No upcoming events found." + "\n");
           // message += "No upcoming events found." + "\n";
-          appendPre("No upcoming events found.");
+          console.log("No upcoming events found.");
         }
       });
   }
-
-  // handleClientLoad();
 
   return (
     <div style={{ padding: "1rem" }}>

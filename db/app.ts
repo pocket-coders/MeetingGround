@@ -6,7 +6,8 @@ import * as schema from "./schema/schema";
 const app: any = express();
 
 //REMEMBER TO HIDE PASSWORD FROM THIS LINE!!
-const mongo_URI: string = process.env.REACT_APP_SECRET_KEY;
+const mongo_URI =
+  "mongodb+srv://admin:Codelabs2020@meetinggrounddb.7jfca.mongodb.net/MeetingGroundDB?retryWrites=true&w=majority";
 
 mongoose
   .connect(mongo_URI, {
@@ -27,3 +28,5 @@ app.use(
 app.listen(4001, () => {
   console.log("🧩 Listening for requests on port 4001");
 });
+
+//if port remains taken after server is terminated, use "killall node"
