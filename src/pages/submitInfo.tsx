@@ -104,8 +104,8 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     email: "",
   };
 
+  // insert accesstoken string here
   let accessToken: string;
-
   const onSubmit = (data: any) => {
     console.log(data);
     console.log(data.firstName);
