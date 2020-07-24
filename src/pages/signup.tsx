@@ -170,6 +170,8 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     }
   }
 
+  const formatDate = (date: Date) =>
+    `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { id: urlId.urlid },
@@ -224,13 +226,15 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
                     selected={startDate}
                     onChange={(date: Date) => {
                       setStartDate(date);
-                      let key =
-                        date.getFullYear().toString() +
-                        "-" +
-                        date.getMonth().toString() +
-                        "-" +
-                        date.getDate().toString();
+                      const key = formatDate(date);
+                      // let key =
+                      //   date.getFullYear().toString() +
+                      //   "-" +
+                      //   date.getMonth().toString() +
+                      //   "-" +
+                      //   date.getDate().toString();
                       console.log("mykey: " + key);
+                      //TODO: excludetimedictionary as a hook
                       setExcludeTimeList(excludeTimeDictionary[key]);
                       console.log(excludeTimeList);
                       setSelect(true);
