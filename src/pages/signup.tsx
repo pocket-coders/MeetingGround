@@ -132,18 +132,99 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
-  let excludeTimeDictionary: { [dateID: string]: Date[] } = {
-    "2020-6-20": [
-      setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-      setHours(setMinutes(new Date(), 30), 18),
-    ],
-    "2020-6-22": [
-      setHours(setMinutes(new Date(), 30), 19),
-      setHours(setMinutes(new Date(), 30), 17),
-    ],
+  type DictionaryItem = {
+    dateKey: string;
+    values: Date[];
   };
+
+  const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
+    DictionaryItem[]
+  >([
+    {
+      dateKey: "2020-6-20",
+      values: [
+        setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+        setHours(setMinutes(new Date(), 30), 18),
+      ],
+    },
+    {
+      dateKey: "2020-6-22",
+      values: [
+        setHours(setMinutes(new Date(), 30), 19),
+        setHours(setMinutes(new Date(), 30), 17),
+      ],
+    },
+  ]);
+  //setExcludeTimeDictionary();
   //let excludeTimeList: Date[] = [];
   const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+
+  //TODO: BELOW IS FOR WHEN DATABASE IS CONNECTED
+  // function useEvents(linkCode: string) {
+  //     return useQuery(GetEventsQuery, variable: { linkCode } );
+  // }
+  function useEvents(linkCode: string) {
+    return {
+      loading: false,
+      error: null,
+      events: excludeTimeDictionary,
+    };
+  }
+
+  type ShowSlotsProps = {
+    linkCode: string;
+    data: any;
+  };
+
+  function ShowSlots(showSlotInfo: ShowSlotsProps) {
+    //{ linkCode }: ShowSlotsProps
+    const { loading, error, events } = useEvents(showSlotInfo.linkCode);
+    return loading ? (
+      <div>loading</div>
+    ) : error ? (
+      <div>An Error occurred: {error}</div>
+    ) : (
+      <div
+        className="form-group"
+        style={{ display: "flex", flexDirection: "row" }}
+      >
+        <DatePicker
+          selected={startDate}
+          onChange={(date: Date) => {
+            setStartDate(date);
+            const key = formatDate(date);
+
+            console.log("mykey: " + key);
+            //TODO: change setExcludeTimeList to get from server query
+
+            let tempDictionaryItem = events.find(
+              (item) => item.dateKey === key
+            );
+            if (tempDictionaryItem !== undefined) {
+              setExcludeTimeList(tempDictionaryItem.values);
+            }
+            console.log(excludeTimeList);
+            setSelect(true);
+          }}
+          timeFormat="HH:mm"
+          timeIntervals={showSlotInfo.data.link.duration}
+          inline
+        />
+        {selectTime && (
+          <DatePicker
+            showTimeSelect
+            showTimeSelectOnly
+            selected={startTime}
+            onChange={(date: Date) => setStartTime(date)}
+            timeFormat="HH:mm"
+            timeIntervals={showSlotInfo.data.link.duration}
+            excludeTimes={excludeTimeList}
+            inline
+          />
+        )}
+      </div>
+    );
+  }
 
   const [selectTime, setSelect] = useState(false);
   function handleSubmit(e: any) {
@@ -172,6 +253,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   const formatDate = (date: Date) =>
     `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { id: urlId.urlid },
@@ -218,44 +300,8 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
             <div className="form-group">
               <form onSubmit={handleSubmit}>
-                <div
-                  className="form-group"
-                  style={{ display: "flex", flexDirection: "row" }}
-                >
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date: Date) => {
-                      setStartDate(date);
-                      const key = formatDate(date);
-                      // let key =
-                      //   date.getFullYear().toString() +
-                      //   "-" +
-                      //   date.getMonth().toString() +
-                      //   "-" +
-                      //   date.getDate().toString();
-                      console.log("mykey: " + key);
-                      //TODO: excludetimedictionary as a hook
-                      setExcludeTimeList(excludeTimeDictionary[key]);
-                      console.log(excludeTimeList);
-                      setSelect(true);
-                    }}
-                    timeFormat="HH:mm"
-                    timeIntervals={data.link.duration}
-                    inline
-                  />
-                  {selectTime && (
-                    <DatePicker
-                      showTimeSelect
-                      showTimeSelectOnly
-                      selected={startTime}
-                      onChange={(date: Date) => setStartTime(date)}
-                      timeFormat="HH:mm"
-                      timeIntervals={data.link.duration}
-                      excludeTimes={excludeTimeList}
-                      inline
-                    />
-                  )}
-                </div>
+                <ShowSlots linkCode={urlId.urlid} data={data} />
+
                 <div
                   className="form-group"
                   style={{ display: "flex", flexDirection: "column" }}
