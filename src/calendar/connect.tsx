@@ -169,6 +169,10 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
+      setAccessToken(
+        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+          .access_token
+      );
       console.log(email);
       console.log(fname);
       console.log(lname);
@@ -320,6 +324,9 @@ const ConnectPage = () => {
     text-align: center;
   `;
 
+  //TODO take out
+  console.log(accesstoken);
+
   return (
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
@@ -406,13 +413,10 @@ const ConnectPage = () => {
               >
                 Welcome {name}
               </h1>
-              <h3> {accesstoken} </h3>
               <img src={picUrl} alt="Avatar." />
               <div
                 style={{ margin: 20, display: "flex", flexDirection: "column" }}
               >
-                {/* <h3> Your meeting has been confirmed!</h3> */}
-
                 <Link to="/home" className="btn btn-success" type="button">
                   Continue to Meeting Ground Home
                 </Link>
