@@ -17,6 +17,8 @@ import { HttpLink } from "apollo-link-http";
 import { ApolloProvider } from "react-apollo";
 import * as config from "../apiGoogleconfig.json";
 import ScheduleCard from "./ScheduleCard/component";
+import { resolve } from "url";
+import { rejects } from "assert";
 
 interface SubmitPagePropsInterface
   extends RouteComponentProps<{ id: string; time: string }> {
@@ -107,6 +109,33 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     email: "",
   };
 
+  const requestSlot = useRequestSlot();
+  // // requestSlot() is a function that you call to make the request.
+  // // Initially, you can dummy it out like this:
+  function useRequestSlot(): (
+    time: Date,
+    linkUrl: string,
+    guestFirst: string,
+    guestLast: string
+  ) => Promise<boolean> {
+    // return () => Promise.resolve();
+    return (
+      time: Date,
+      linkUrl: string,
+      guestFirst: string,
+      guestLast: string
+    ) =>
+      new Promise<boolean>(function (resolve, reject) {
+        initiate()
+          .then(() => resolve(true))
+          .catch(() => reject(new Error("useRequestSlot")));
+      });
+  }
+  //when the backend is ready, you can change it to something like:
+  // function useRequestSlot(): (time: number) => Promise<boolean> {
+  //     const mutate = useMutation(RequestSlot);
+  //     return (time:number) => mutate({variables: { time } });  // }
+
   // TODO insert accesstoken string here
   let accessToken: string;
   const onSubmit = (data: any) => {
@@ -120,8 +149,22 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       window.alert("invalid email");
     } else {
       //setReadyToSend(true);
-      initiate();
-      props.history.push("/confirmation");
+      //initiate();
+      requestSlot(scheduledDate, urlId.urlid, data.firstName, data.lastName)
+        .then((result) => {
+          if (result) {
+            console.log("scheduled time succesfully:" + result);
+            props.history.push("/confirmation");
+          }
+          //  else {
+          //   console.log("could not schedule event");
+          //   props.history.push("/signup/" + urlId.urlid);
+          // }
+        })
+        .catch((err) => {
+          console.log("could not schedule event");
+          props.history.push("/signup/" + urlId.urlid);
+        });
     }
   };
 
@@ -148,11 +191,21 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   }
 
   // ________________________________________________________________________________________
-  function initiate() {
-    gapi.load("client:auth2", initClient);
+  function initiate(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      gapi.load("client:auth2", () => {
+        initClient()
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => {
+            reject(new Error("initiate doesn't work"));
+          });
+      });
+    });
   }
 
-  function initClient() {
+  function initClient(): Promise<void> {
     // const values = {
     //   'client_id': config.config.clientId,
     //   'scope': config.config.scope,
@@ -162,32 +215,48 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     //   console.log(gapi.auth.getToken());
     // });
     //
-    gapi.client
-      .init({
-        apiKey: config.config.apiKey,
-        clientId: config.config.clientId,
-        discoveryDocs: config.config.discoveryDocs,
-        scope: config.config.scope,
-      })
-      .then(
-        function () {
-          // Listen for sign-in state changes.
-          // gapi.auth2.authorize;
+    let eventSuccess: any;
+    //return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
+      gapi.client
+        .init({
+          apiKey: config.config.apiKey,
+          clientId: config.config.clientId,
+          discoveryDocs: config.config.discoveryDocs,
+          scope: config.config.scope,
+        })
+        .then(
+          () => {
+            // Listen for sign-in state changes.
+            // gapi.auth2.authorize;
 
-          // gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-          // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-          gapi.client.setToken({
-            access_token: accessToken,
-          });
-        },
-        function (error: any) {
-          console.log("An errot in update");
-          //appendPre(JSON.stringify(error, null, 2));
-        }
-      )
-      .then(function () {
-        accessUserOffline();
-      });
+            // gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+            // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+            gapi.client.setToken({
+              access_token: accessToken,
+            });
+          },
+          function (error: any) {
+            console.log("An errot in update");
+            //appendPre(JSON.stringify(error, null, 2));
+          }
+        )
+        .then(() => {
+          //returns a promise
+          accessUserOffline()
+            .then(() => {
+              console.log("success in initiate");
+              resolve();
+            })
+            .catch((err) => {
+              console.log(err);
+              reject(new Error("accessuseroffline doesn't work"));
+            });
+        });
+    });
+
+    //resolve({ eventStatus: eventSuccess });
+    //});
   }
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
@@ -198,6 +267,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       //   "ya29.a0AfH6SMDsk-PBxuG0etR5n4CdEN7K8JFCam6zIA4vEEcZ71qYENWBV8SuP1XoktDhmhTlCMhrteGWUchJExi6_oO-6c2RbWylklmwUvDZM2EwpSNl1iALYgMMxKA0u0_7KQ1AFxprea4RUiTlOseqAjIPGA6H7gd0FQM"
       // );
     }
+
     accessUserOffline();
   }
 
@@ -255,17 +325,26 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
         ],
       },
     };
+    let eventScheduledHere = false;
 
-    gapi.client.calendar.events
-      .insert({
-        calendarId: "primary",
-        resource: event,
-        sendNotifications: true,
-        sendUpdates: "all",
-      })
-      .execute(function (event) {
-        console.log("Event created: " + event.status);
-      });
+    return new Promise((resolve, reject) => {
+      gapi.client.calendar.events
+        .insert({
+          calendarId: "primary",
+          resource: event,
+          sendNotifications: true,
+          sendUpdates: "all",
+        })
+        .execute((event) => {
+          console.log("event status:" + event.status);
+
+          if (event.status?.toLocaleString() === "confirmed") {
+            resolve({ eventScheduledHere: true });
+          } else {
+            reject(new Error("event not submmitted"));
+          }
+        });
+    });
   }
 
   return (
