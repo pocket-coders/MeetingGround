@@ -1,5 +1,5 @@
 import * as graphql from "graphql";
-import GraphQLDateTime from "graphql-type-datetime";
+import { GraphQLDateTime } from "graphql-type-datetime";
 import slotQuery from "./slotFind";
 const _ = require("lodash");
 const Link = require("../models/link");
@@ -74,7 +74,7 @@ const RootQuery = new GraphQLObjectType({
       },
     },
     list_available_slots: {
-      type: SlotType,
+      type: new GraphQLList(SlotType),
       args: { url: { type: GraphQLString } },
       async resolve(parent, args) {
         const link = Link.findOne(args);

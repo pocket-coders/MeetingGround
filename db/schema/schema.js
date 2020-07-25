@@ -77,8 +77,8 @@ var HostType = new GraphQLObjectType({
 var SlotType = new GraphQLObjectType({
     name: "Slot",
     fields: function () { return ({
-        start_time: { type: graphql_type_datetime_1["default"] },
-        end_time: { type: graphql_type_datetime_1["default"] }
+        start_time: { type: graphql_type_datetime_1.GraphQLDateTime },
+        end_time: { type: graphql_type_datetime_1.GraphQLDateTime }
     }); }
 });
 // Queries
@@ -100,7 +100,7 @@ var RootQuery = new GraphQLObjectType({
             }
         },
         list_available_slots: {
-            type: SlotType,
+            type: new GraphQLList(SlotType),
             args: { url: { type: GraphQLString } },
             resolve: function (parent, args) {
                 return __awaiter(this, void 0, void 0, function () {

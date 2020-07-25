@@ -1,15 +1,17 @@
 "use strict";
+// import { config } from "../../src/apiGoogleconfig.json";
+// import moment from "moment";
 exports.__esModule = true;
-var apiGoogleconfig_json_1 = require("../../src/apiGoogleconfig.json");
-var moment_1 = require("moment");
+var config = require("../../src/apiGoogleconfig.json");
+var moment = require("moment");
 function slotQuery(accessCode) {
     return gapi.load("client:auth2", function () {
         return gapi.client
             .init({
-            apiKey: apiGoogleconfig_json_1.config.apiKey,
-            clientId: apiGoogleconfig_json_1.config.clientId,
-            discoveryDocs: apiGoogleconfig_json_1.config.discoveryDocs,
-            scope: apiGoogleconfig_json_1.config.scope
+            apiKey: config.apiKey,
+            clientId: config.clientId,
+            discoveryDocs: config.discoveryDocs,
+            scope: config.scope
         })
             .then(function () {
             gapi.client.setToken({
@@ -32,8 +34,8 @@ function slotQuery(accessCode) {
                 // const events: any[] = response.result.items;
                 var events = response.result.items;
                 var rv = events.map(function (event) { return ({
-                    start: moment_1["default"].utc(event.start.dateTime).toDate(),
-                    end: moment_1["default"].utc(event.end.dateTime).toDate()
+                    start: moment.utc(event.start.dateTime).toDate(),
+                    end: moment.utc(event.end.dateTime).toDate()
                 }); });
                 return rv;
             });

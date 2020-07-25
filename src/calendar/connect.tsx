@@ -43,12 +43,23 @@ const ConnectPage = () => {
     async function addHostToDb() {
       // GOA_code --> Google Offline Access code
       const arg = await mutate({
-        variables: { GOA_code, fname, lname, email },
+        variables: {
+          fname: fname,
+          lname: lname,
+          email: email,
+          GOA_code: GOA_code,
+        },
       });
       console.log(arg);
     }
     if (GOA_code && fname && lname && email) {
-      addHostToDb();
+      addHostToDb()
+        .then(() => {
+          console.log("appended successfully");
+        })
+        .catch((err) => {
+          console.log("an error happened");
+        });
     }
   }, [GOA_code, fname, lname, email, mutate]);
 
