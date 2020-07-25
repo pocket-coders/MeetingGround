@@ -267,7 +267,7 @@ const ConnectPage = () => {
               message + event.summary + " (" + when + ")" + "\n";
             setMessage(temp);
             // message += temp;
-            appendPre(event.summary + " (" + when + ")");
+            // appendPre(event.summary + " (" + when + ")");
           }
         } else {
           setMessage("No upcoming events found." + "\n");
