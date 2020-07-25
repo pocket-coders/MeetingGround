@@ -1,4 +1,6 @@
 import * as graphql from "graphql";
+import GraphQLDateTime from "graphql-type-datetime";
+import slotQuery from "./slotFind";
 const _ = require("lodash");
 const Link = require("../models/link");
 const Host = require("../models/host");
@@ -45,6 +47,14 @@ const HostType = new GraphQLObjectType({
   }),
 });
 
+const SlotType = new GraphQLObjectType({
+  name: "Slot",
+  fields: () => ({
+    start_time: { type: GraphQLDateTime },
+    end_time: { type: GraphQLDateTime },
+  }),
+});
+
 // Queries
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
@@ -61,6 +71,17 @@ const RootQuery = new GraphQLObjectType({
       args: { url: { type: GraphQLString } },
       resolve(parent, args) {
         return Link.findOne(args);
+      },
+    },
+    list_available_slots: {
+      type: SlotType,
+      args: { url: { type: GraphQLString } },
+      async resolve(parent, args) {
+        const link = Link.findOne(args);
+        const host = Host.findOne({ id: link.hostId });
+        const { GOA_code } = host;
+        const slots = await slotQuery(GOA_code);
+        return slots;
       },
     },
     host: {
@@ -113,7 +134,7 @@ const Mutation = new GraphQLObjectType({
         GOA_code: { type: new GraphQLNonNull(GraphQLString) },
       },
       async resolve(parent, { Fname, Lname, email, GOA_code }) {
-        console.log("Variables are: ", { Fname, Lname, email, GOA_code });
+        console.log("1Variables are: ", { Fname, Lname, email, GOA_code });
         const hostExists = await checkHostsExists(email);
         if (!hostExists) {
           const host = new Host({

@@ -37,6 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var graphql = require("graphql");
+var graphql_type_datetime_1 = require("graphql-type-datetime");
+var slotFind_1 = require("./slotFind");
 var _ = require("lodash");
 var Link = require("../models/link");
 var Host = require("../models/host");
@@ -72,6 +74,13 @@ var HostType = new GraphQLObjectType({
         }
     }); }
 });
+var SlotType = new GraphQLObjectType({
+    name: "Slot",
+    fields: function () { return ({
+        start_time: { type: graphql_type_datetime_1["default"] },
+        end_time: { type: graphql_type_datetime_1["default"] }
+    }); }
+});
 // Queries
 var RootQuery = new GraphQLObjectType({
     name: "RootQueryType",
@@ -88,6 +97,27 @@ var RootQuery = new GraphQLObjectType({
             args: { url: { type: GraphQLString } },
             resolve: function (parent, args) {
                 return Link.findOne(args);
+            }
+        },
+        list_available_slots: {
+            type: SlotType,
+            args: { url: { type: GraphQLString } },
+            resolve: function (parent, args) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var link, host, GOA_code, slots;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                link = Link.findOne(args);
+                                host = Host.findOne({ id: link.hostId });
+                                GOA_code = host.GOA_code;
+                                return [4 /*yield*/, slotFind_1["default"](GOA_code)];
+                            case 1:
+                                slots = _a.sent();
+                                return [2 /*return*/, slots];
+                        }
+                    });
+                });
             }
         },
         host: {
@@ -154,7 +184,7 @@ var Mutation = new GraphQLObjectType({
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
-                                console.log("Variables are: ", { Fname: Fname, Lname: Lname, email: email, GOA_code: GOA_code });
+                                console.log("1Variables are: ", { Fname: Fname, Lname: Lname, email: email, GOA_code: GOA_code });
                                 return [4 /*yield*/, checkHostsExists(email)];
                             case 1:
                                 hostExists = _b.sent();

@@ -1,8 +1,7 @@
 import express = require("express");
-const { graphqlHTTP } = require("express-graphql");
 import * as mongoose from "mongoose";
 import * as schema from "./schema/schema";
-
+const { graphqlHTTP } = require("express-graphql");
 const app: any = express();
 
 //REMEMBER TO HIDE PASSWORD FROM THIS LINE!!
