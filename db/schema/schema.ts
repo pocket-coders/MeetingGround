@@ -1,5 +1,5 @@
-//const graphql = require("graphql");
 import * as graphql from "graphql";
+import slotQuery from "./slotFind";
 const _ = require("lodash");
 const Link = require("../models/link");
 const Host = require("../models/host");
@@ -7,7 +7,6 @@ const Host = require("../models/host");
 const {
   GraphQLObjectType,
   GraphQLString,
-  GraphQLSchema,
   GraphQLID,
   GraphQLInt,
   GraphQLList,
@@ -37,13 +36,21 @@ const HostType = new GraphQLObjectType({
     Fname: { type: GraphQLString },
     Lname: { type: GraphQLString },
     email: { type: GraphQLString },
+    GOA_code: { type: GraphQLString },
     urls_sent: {
       type: new GraphQLList(LinkType),
       resolve(parent, args) {
-        //return _.filter(books, { authorId: parent.id });
         return Link.find({ hostId: parent.id });
       },
     },
+  }),
+});
+
+const SlotType = new GraphQLObjectType({
+  name: "Slot",
+  fields: () => ({
+    start_time: { type: GraphQLString },
+    end_time: { type: GraphQLString },
   }),
 });
 
@@ -53,10 +60,27 @@ const RootQuery = new GraphQLObjectType({
   fields: {
     link: {
       type: LinkType,
-      args: { id: { type: GraphQLID } }, //URL(id: 2)   (specify id of URL)
+      args: { id: { type: GraphQLID } },
       resolve(parent, args) {
-        // code to get data from db / other source
         return Link.findById(args.id);
+      },
+    },
+    link_url: {
+      type: LinkType,
+      args: { url: { type: GraphQLString } },
+      resolve(parent, args) {
+        return Link.findOne(args);
+      },
+    },
+    list_available_slots: {
+      type: new GraphQLList(SlotType),
+      args: { url: { type: GraphQLString } },
+      async resolve(parent, args) {
+        const link = Link.findOne(args);
+        const host = Host.findOne({ id: link.hostId });
+        const { GOA_code } = host;
+        const slots = await slotQuery(GOA_code);
+        return slots;
       },
     },
     host: {
@@ -64,6 +88,13 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLID } },
       resolve(parent, args) {
         return Host.findById(args.id);
+      },
+    },
+    host_email: {
+      type: HostType,
+      args: { email: { type: GraphQLString } },
+      resolve(parent, args) {
+        return Host.findOne(args);
       },
     },
     links: {
@@ -83,6 +114,12 @@ const RootQuery = new GraphQLObjectType({
   },
 });
 
+async function checkHostsExists(email: string): Promise<boolean> {
+  const h: Promise<typeof Host> = Host.findOne({ email });
+  const hv = !!(await h);
+  return hv;
+}
+
 // Mutations
 const Mutation = new GraphQLObjectType({
   name: "Mutation",
@@ -93,14 +130,21 @@ const Mutation = new GraphQLObjectType({
         Fname: { type: new GraphQLNonNull(GraphQLString) },
         Lname: { type: new GraphQLNonNull(GraphQLString) },
         email: { type: new GraphQLNonNull(GraphQLString) },
+        GOA_code: { type: new GraphQLNonNull(GraphQLString) },
       },
-      resolve(parent, args) {
-        let host = new Host({
-          Fname: args.Fname,
-          Lname: args.Lname,
-          email: args.email,
-        });
-        return host.save(); //save to the database and return results
+      async resolve(parent, { Fname, Lname, email, GOA_code }) {
+        console.log("1Variables are: ", { Fname, Lname, email, GOA_code });
+        const hostExists = await checkHostsExists(email);
+        if (!hostExists) {
+          const host = new Host({
+            Fname: Fname,
+            Lname: Lname,
+            email: email,
+            GOA_code: GOA_code,
+          });
+          return host.save(); //save to the database and return results
+        }
+        return null;
       },
     },
     addLink: {

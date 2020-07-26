@@ -5,6 +5,7 @@ const hostSchema = new Schema({
   Fname: String,
   Lname: String,
   email: String,
+  GOA_code: String,
 });
 
 module.exports = mongoose.model("host_cols", hostSchema);
