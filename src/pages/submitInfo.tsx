@@ -19,6 +19,7 @@ import * as config from "../apiGoogleconfig.json";
 import ScheduleCard from "./ScheduleCard/component";
 import { resolve } from "url";
 import { rejects } from "assert";
+import axios from "axios";
 
 interface SubmitPagePropsInterface
   extends RouteComponentProps<{ id: string; time: string }> {
@@ -76,6 +77,39 @@ const urlId: {
 } = {
   urlid: "",
 };
+
+async function getNewAccessToken(refreshToken: any) {
+  let data = {
+    client_id: config.config.clientId,
+    client_secret: config.config.clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  };
+  let myaccesstoken = await fetch(
+    "https://www.googleapis.com/oauth2/v2/token",
+    {
+      method: "post",
+      headers: {
+        Content_Type: "application/json",
+        // client_id: config.config.clientId,
+        // client_secret: config.config.clientSecret,
+        // refresh_token: refreshToken,
+        // grant_type: "refresh_token",
+      },
+      body: JSON.stringify(data),
+      // body: {
+      //   client_id: config.config.clientId,
+      //   client_secret: config.config.clientSecret,
+      //   refresh_token: refreshToken,
+      //   grant_type: "refresh_token",
+      // }
+    }
+  )
+    .then((response) => {
+      console.log(response.json());
+    })
+    .then((json) => console.log(json));
+}
 
 const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   props: SubmitPagePropsInterface
@@ -137,7 +171,13 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   //     return (time:number) => mutate({variables: { time } });  // }
 
   // TODO insert accesstoken string here
-  let accessToken: string;
+  let accessToken: string =
+    "ya29.a0AfH6SMDY4D_R4A1nSFVCj8-K0KHg48bo9Y2ooPX07QDFebx4VOrrWInQeCUlz8RFtI-EkycMcNNxMlQ6IjIAXitlP7r_3C24l8yMDOGnGUPuL5qNCjfXG0ShnpyTZmj6Y02shxXEiSrc-NFub5GWOH24pQ0IJm1Z6BQ";
+
+  let refreshToken: string =
+    "4/2QHycMpj5E3KlyDm5aRjiz_5u3UqSN5rQwEbherjrsgyfvmtNJ2QUt9PDrhheBHIWgZdhd0HaqibUR5HSU76vWQ";
+  //getNewAccessToken(refreshToken);
+  getNewAccessToken(refreshToken);
   const onSubmit = (data: any) => {
     console.log(data);
     console.log(data.firstName);
@@ -234,6 +274,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
             // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
             gapi.client.setToken({
               access_token: accessToken,
+              //refresh_token: accessToken,
             });
           },
           function (error: any) {

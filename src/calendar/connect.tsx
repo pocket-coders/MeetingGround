@@ -4,28 +4,72 @@ import moment from "moment";
 import MyCalendar from "../pages/Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-// const getter = require("express");
-
 import logo from "../pages/img/meetingGroundLogo.png";
 import { Link } from "react-router-dom";
+import { useMutation } from "react-apollo";
+import { gql } from "apollo-boost";
 
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
 
+const AppendHostToDB = gql`
+  mutation addHost(
+    $fname: String!
+    $lname: String!
+    $email: String!
+    $auth_code: String!
+  ) {
+    addHost(
+      Fname: $fname
+      Lname: $lname
+      email: $email
+      auth_code: $auth_code
+    ) {
+      Lname
+      email
+    }
+  }
+`;
+
 const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
-  const [accesstoken, setAccessToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
+  const [auth_code, setAuthcode] = useState(""); //user Google Offline Access code
   const [message, setMessage] = useState("");
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [authorizeButton, setAuthorizeButton] = useState("");
   const [signoutButton, setSignoutButton] = useState("");
+  const [mutate] = useMutation(AppendHostToDB);
+
+  useEffect(() => {
+    async function addHostToDb() {
+      // auth_code --> Google Offline Access code
+      const arg = await mutate({
+        variables: {
+          fname: fname,
+          lname: lname,
+          email: email,
+          auth_code: auth_code,
+        },
+      });
+      console.log(arg);
+    }
+    if (auth_code && fname && lname && email) {
+      addHostToDb()
+        .then(() => {
+          console.log("appended successfully");
+        })
+        .catch((err) => {
+          console.log("an error happened");
+        });
+    }
+  }, [auth_code, fname, lname, email, mutate]);
 
   /**
    *  On load, called to load the auth2 library and API client library.
@@ -70,50 +114,100 @@ const ConnectPage = () => {
       );
   }
 
+  //get refresh tokens
+  // const getRefreshTokenFromGoogleServices = (authCode: any) => {
+  //   return new Promise((resolve, reject) => {
+  //     var jsonRequest = {
+  //       client_id: config.config.clientId,
+  //       client_secret: config.config.clientSecret,
+  //       code: authCode,
+  //       grant_type: "authorization_code",
+  //       redirect_uri: "postmessage",
+  //     };
+  //     console.log(jsonRequest);
+  //     request(
+  //       {
+  //         url: "https://accounts.google.com/o/oauth2/token",
+  //         method: "POST",
+  //         headers: [{ name: "Content-Type", value: "application/json" }],
+  //         body: jsonRequest,
+  //         json: true,
+  //       },
+  //       function (error:any, res:any) {
+  //         if (error) {
+  //           // console.error(err);
+  //           // return reject(err);
+  //           return reject(error);
+  //         } else if (res.statusCode === 200) {
+  //           return resolve(res.body);
+  //           // return access token valid for 3 months
+  //         } else {
+  //           // return reject(res);
+  //           return reject(res);
+  //         }
+  //       }
+  //     );
+  //   });
+  // };
+
   /**
    *  Sign in the user upon button click.
    */
   function handleAuthClick(event: any) {
     // Granting access when the user is offline
-    gapi.auth2
-      .getAuthInstance()
-      .grantOfflineAccess()
-      .then(function (response: any) {
-        gapi.auth2.getAuthInstance().signIn();
-        setAccessToken(
-          gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
-            .access_token
-        );
-        setRefreshToken(response.code);
+    gapi.client
+      .init({
+        apiKey: config.config.apiKey,
+        clientId: config.config.clientId,
+        discoveryDocs: config.config.discoveryDocs,
+        scope: config.config.scope,
+      })
+      .then(() => {
+        gapi.auth2
+          .getAuthInstance()
+          .grantOfflineAccess()
+          .then(function (response: any) {
+            //auth code? not refresh token
+            setRefreshToken(response.code);
+            gapi.auth2.getAuthInstance().signIn();
+            // setAuthcode(
+            //   gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+            //     .access_token
+            // );
 
-        if (response["code"]) {
-          // Hide the sign-in button now that the user is authorized, for example:
-          setAuthorizeButton("none");
-          //$("#signinButton").attr("style", "display: none");
-          console.log(response);
+            console.log("my refresh token: " + refreshToken);
+            if (response.code) {
+              // Hide the sign-in button now that the user is authorized, for example:
+              setAuthorizeButton("none");
+              //$("#signinButton").attr("style", "display: none");
+              console.log("response code: ");
+              console.log(response);
+              setAuthcode(response.code);
+              console.log("After host added/found");
 
-          // Send the code to the server
-          // getter.ajax({
-          //   type: "POST",
-          //   url: "http://example.com/storeauthcode",
-          //   // Always include an `X-Requested-With` header in every AJAX request,
-          //   // to protect against CSRF attacks.
-          //   headers: {
-          //     "X-Requested-With": "XMLHttpRequest",
-          //   },
-          //   contentType: "application/octet-stream; charset=utf-8",
-          //   success: function (result: any) {
-          //     // Handle or verify the server response.
-          //   },
-          //   processData: false,
-          //   data: response["code"],
-          // });
-        } else {
-          // THERE WAS AN ERROR
-          console.log("THERE WAS AN ERROR");
-        }
+              // Send the code to the server
+              // getter.ajax({
+              //   type: "POST",
+              //   url: "http://example.com/storeauthcode",
+              //   // Always include an `X-Requested-With` header in every AJAX request,
+              //   // to protect against CSRF attacks.
+              //   headers: {
+              //     "X-Requested-With": "XMLHttpRequest",
+              //   },
+              //   contentType: "application/octet-stream; charset=utf-8",
+              //   success: function (result: any) {
+              //     // Handle or verify the server response.
+              //   },
+              //   processData: false,
+              //   data: response["code"],
+              // });
+            } else {
+              // THERE WAS AN ERROR
+              console.log("THERE WAS AN ERROR");
+            }
+          });
+        //gapi.auth2.getAuthInstance().signIn();
       });
-    //gapi.auth2.getAuthInstance().signIn();
   }
 
   /**
@@ -169,10 +263,12 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
-      setAccessToken(
+      setAuthcode(
         gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
           .access_token
       );
+      setRefreshToken(refreshToken);
+
       console.log(email);
       console.log(fname);
       console.log(lname);
@@ -325,8 +421,8 @@ const ConnectPage = () => {
   `;
 
   //TODO take out
-  console.log(accesstoken);
-
+  //console.log(accesstoken);
+  console.log(refreshToken);
   return (
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>

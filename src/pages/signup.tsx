@@ -112,6 +112,27 @@ let interval: number;
 //   });
 // };
 
+type DictionaryItem = {
+  dateKey: string;
+  values: Date[];
+};
+
+const excludeQuery = gql`
+  query($link: String) {
+    list_available_slots(url: $link)
+  }
+`;
+
+function useEvents(link: string) {
+  const { loading, error, data } = useQuery<{ events: DictionaryItem[] }>(
+    excludeQuery,
+    { variables: { link } }
+  );
+  const events = data?.events;
+
+  return { loading, error, events };
+}
+
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
 ) => {
@@ -130,11 +151,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
-  };
-
-  type DictionaryItem = {
-    dateKey: string;
-    values: Date[];
   };
 
   const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
@@ -163,13 +179,14 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   // function useEvents(linkCode: string) {
   //     return useQuery(GetEventsQuery, variable: { linkCode } );
   // }
-  function useEvents(linkCode: string) {
-    return {
-      loading: false,
-      error: null,
-      events: excludeTimeDictionary,
-    };
-  }
+
+  // function useEvents(linkCode: string) {
+  //   return {
+  //     loading: false,
+  //     error: null,
+  //     events: excludeTimeDictionary,
+  //   };
+  // }
 
   type ShowSlotsProps = {
     linkCode: string;
@@ -197,7 +214,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             console.log("mykey: " + key);
             //TODO: change setExcludeTimeList to get from server query
 
-            let tempDictionaryItem = events.find(
+            let tempDictionaryItem = events?.find(
               (item) => item.dateKey === key
             );
             if (tempDictionaryItem !== undefined) {

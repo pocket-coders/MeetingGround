@@ -5,6 +5,7 @@
     "scope": "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.settings.readonly",
     "discoveryDocs": [
       "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"
-    ]
+    ],
+    "clientSecret": "vpM3s6IXDLcmZtNpkOFbeQMg"
   }
 }

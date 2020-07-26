@@ -1,7 +1,9 @@
 /*users.jsx*/
 import React from "react";
+import * as config from "../apiGoogleconfig.json";
 import ScheduleEngine from "./ScheduleEngine";
 import styled from "@emotion/styled";
+import { RouteComponentProps } from "react-router-dom";
 
 import logo from "./img/meetingGroundLogo.png";
 
@@ -44,8 +46,27 @@ const MainBodyFormat = styled.div`
   height: 1000px;
   border-radius: 25px;
 `;
+interface HomePropsInterface extends RouteComponentProps<{}> {
+  // Other props that belong to component it self not Router
+}
 
-const HomePage = () => {
+const HomePage: React.FC<HomePropsInterface> = (props: HomePropsInterface) => {
+  function handleSignoutClick(event: any) {
+    gapi.load("client:auth2", () => {
+      gapi.client
+        .init({
+          apiKey: config.config.apiKey,
+          clientId: config.config.clientId,
+          discoveryDocs: config.config.discoveryDocs,
+          scope: config.config.scope,
+        })
+        .then(() => {
+          gapi.auth2.getAuthInstance().signOut();
+          props.history.push("/");
+        });
+    });
+  }
+
   return (
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
@@ -64,6 +85,7 @@ const HomePage = () => {
                 float: "right",
                 margin: 30,
               }}
+              onClick={handleSignoutClick}
             >
               Sign Out
             </button>
