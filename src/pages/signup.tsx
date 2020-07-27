@@ -339,6 +339,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   return (
     <ApolloProvider client={client}>
+<<<<<<< HEAD
       {/* <SignUpServer /> */}
 
       <IntervalSetup />
@@ -349,6 +350,9 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       {/* <CalendarCard>
         <MyCalendar myList={temp} />
       </CalendarCard> */}
+=======
+      <IntervalSetup />
+>>>>>>> 88d72da0be4a06f6e87e5d35b2fa15397156a4d2
     </ApolloProvider>
   );
 };
