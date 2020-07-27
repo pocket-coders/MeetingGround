@@ -1,10 +1,14 @@
 /*users.jsx*/
-import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-// yarn add react-hook-form
 import { RouteComponentProps } from "react-router-dom";
 //You have to use the link component to link between you pages
+
+import styled from "@emotion/styled";
+import logo from "./img/meetingGroundLogo.png";
 import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+// yarn add react-hook-form
+//You have to use the link component to link between you pages
 import { useQuery } from "@apollo/react-hooks";
 import gql from "graphql-tag";
 import { ApolloClient } from "apollo-client";
@@ -12,13 +16,53 @@ import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
 import { HttpLink } from "apollo-link-http";
 import { ApolloProvider } from "react-apollo";
 import * as config from "../apiGoogleconfig.json";
-import { Console } from "console";
 import ScheduleCard from "./ScheduleCard/component";
+import { resolve } from "url";
+import { rejects } from "assert";
+import axios from "axios";
 
 interface SubmitPagePropsInterface
   extends RouteComponentProps<{ id: string; time: string }> {
   // Other props that belong to component it self not Router
 }
+const LogoCard = styled.img`
+  width: 450px;
+  height: 100px;
+  justify-content: space-around;
+  float: left;
+`;
+
+const TopFormat = styled.div`
+  margin: 0 auto;
+  width: 100%;
+  overflow: auto;
+  display: inline-block;
+  background: white;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+`;
+
+const MainBodyFormat = styled.div`
+  margin: 0 auto;
+  align-items: center;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  height: 650px;
+  border-radius: 25px;
+`;
+
+const Inputformat = styled.input`
+  width: 100%;
+  padding: 10px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+`;
 
 const meetingInfo: {
   hostEmail: string;
@@ -33,6 +77,39 @@ const urlId: {
 } = {
   urlid: "",
 };
+
+async function getNewAccessToken(refreshToken: any) {
+  let data = {
+    client_id: config.config.clientId,
+    client_secret: config.config.clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  };
+  let myaccesstoken = await fetch(
+    "https://www.googleapis.com/oauth2/v2/token",
+    {
+      method: "post",
+      headers: {
+        Content_Type: "application/json",
+        // client_id: config.config.clientId,
+        // client_secret: config.config.clientSecret,
+        // refresh_token: refreshToken,
+        // grant_type: "refresh_token",
+      },
+      body: JSON.stringify(data),
+      // body: {
+      //   client_id: config.config.clientId,
+      //   client_secret: config.config.clientSecret,
+      //   refresh_token: refreshToken,
+      //   grant_type: "refresh_token",
+      // }
+    }
+  )
+    .then((response) => {
+      console.log(response.json());
+    })
+    .then((json) => console.log(json));
+}
 
 const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   props: SubmitPagePropsInterface
@@ -66,6 +143,41 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     email: "",
   };
 
+  const requestSlot = useRequestSlot();
+  // // requestSlot() is a function that you call to make the request.
+  // // Initially, you can dummy it out like this:
+  function useRequestSlot(): (
+    time: Date,
+    linkUrl: string,
+    guestFirst: string,
+    guestLast: string
+  ) => Promise<boolean> {
+    // return () => Promise.resolve();
+    return (
+      time: Date,
+      linkUrl: string,
+      guestFirst: string,
+      guestLast: string
+    ) =>
+      new Promise<boolean>(function (resolve, reject) {
+        initiate()
+          .then(() => resolve(true))
+          .catch(() => reject(new Error("useRequestSlot")));
+      });
+  }
+  //when the backend is ready, you can change it to something like:
+  // function useRequestSlot(): (time: number) => Promise<boolean> {
+  //     const mutate = useMutation(RequestSlot);
+  //     return (time:number) => mutate({variables: { time } });  // }
+
+  // TODO insert accesstoken string here
+  let accessToken: string =
+    "ya29.a0AfH6SMDY4D_R4A1nSFVCj8-K0KHg48bo9Y2ooPX07QDFebx4VOrrWInQeCUlz8RFtI-EkycMcNNxMlQ6IjIAXitlP7r_3C24l8yMDOGnGUPuL5qNCjfXG0ShnpyTZmj6Y02shxXEiSrc-NFub5GWOH24pQ0IJm1Z6BQ";
+
+  let refreshToken: string =
+    "4/2QHycMpj5E3KlyDm5aRjiz_5u3UqSN5rQwEbherjrsgyfvmtNJ2QUt9PDrhheBHIWgZdhd0HaqibUR5HSU76vWQ";
+  //getNewAccessToken(refreshToken);
+  getNewAccessToken(refreshToken);
   const onSubmit = (data: any) => {
     console.log(data);
     console.log(data.firstName);
@@ -77,8 +189,22 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       window.alert("invalid email");
     } else {
       //setReadyToSend(true);
-      initiate();
-      props.history.push("/confirmation");
+      //initiate();
+      requestSlot(scheduledDate, urlId.urlid, data.firstName, data.lastName)
+        .then((result) => {
+          if (result) {
+            console.log("scheduled time succesfully:" + result);
+            props.history.push("/confirmation");
+          }
+          //  else {
+          //   console.log("could not schedule event");
+          //   props.history.push("/signup/" + urlId.urlid);
+          // }
+        })
+        .catch((err) => {
+          console.log("could not schedule event");
+          props.history.push("/signup/" + urlId.urlid);
+        });
     }
   };
 
@@ -105,11 +231,21 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   }
 
   // ________________________________________________________________________________________
-  function initiate() {
-    gapi.load("client:auth2", initClient);
+  function initiate(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      gapi.load("client:auth2", () => {
+        initClient()
+          .then(() => {
+            resolve();
+          })
+          .catch((err) => {
+            reject(new Error("initiate doesn't work"));
+          });
+      });
+    });
   }
 
-  function initClient() {
+  function initClient(): Promise<void> {
     // const values = {
     //   'client_id': config.config.clientId,
     //   'scope': config.config.scope,
@@ -118,26 +254,50 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     //   console.log('login complete');
     //   console.log(gapi.auth.getToken());
     // });
+    //
+    let eventSuccess: any;
+    //return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
+      gapi.client
+        .init({
+          apiKey: config.config.apiKey,
+          clientId: config.config.clientId,
+          discoveryDocs: config.config.discoveryDocs,
+          scope: config.config.scope,
+        })
+        .then(
+          () => {
+            // Listen for sign-in state changes.
+            // gapi.auth2.authorize;
 
-    gapi.client
-      .init({
-        apiKey: config.config.clientId,
-        clientId: config.config.clientId,
-        discoveryDocs: config.config.discoveryDocs,
-        scope: config.config.scope,
-      })
-      .then(
-        function () {
-          // Listen for sign-in state changes.
-          // gapi.auth2.authorize;
-          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-          updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-        },
-        function (error: any) {
-          console.log("An errot in update");
-          //appendPre(JSON.stringify(error, null, 2));
-        }
-      );
+            // gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+            // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+            gapi.client.setToken({
+              access_token: accessToken,
+              //refresh_token: accessToken,
+            });
+          },
+          function (error: any) {
+            console.log("An errot in update");
+            //appendPre(JSON.stringify(error, null, 2));
+          }
+        )
+        .then(() => {
+          //returns a promise
+          accessUserOffline()
+            .then(() => {
+              console.log("success in initiate");
+              resolve();
+            })
+            .catch((err) => {
+              console.log(err);
+              reject(new Error("accessuseroffline doesn't work"));
+            });
+        });
+    });
+
+    //resolve({ eventStatus: eventSuccess });
+    //});
   }
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
@@ -148,6 +308,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       //   "ya29.a0AfH6SMDsk-PBxuG0etR5n4CdEN7K8JFCam6zIA4vEEcZ71qYENWBV8SuP1XoktDhmhTlCMhrteGWUchJExi6_oO-6c2RbWylklmwUvDZM2EwpSNl1iALYgMMxKA0u0_7KQ1AFxprea4RUiTlOseqAjIPGA6H7gd0FQM"
       // );
     }
+
     accessUserOffline();
   }
 
@@ -205,56 +366,123 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
         ],
       },
     };
+    let eventScheduledHere = false;
 
-    gapi.client.calendar.events
-      .insert({
-        calendarId: "primary",
-        resource: event,
-        sendNotifications: true,
-        sendUpdates: "all",
-      })
-      .execute(function (event) {
-        console.log("Event created: " + event.status);
-      });
+    return new Promise((resolve, reject) => {
+      gapi.client.calendar.events
+        .insert({
+          calendarId: "primary",
+          resource: event,
+          sendNotifications: true,
+          sendUpdates: "all",
+        })
+        .execute((event) => {
+          console.log("event status:" + event.status);
+
+          if (event.status?.toLocaleString() === "confirmed") {
+            resolve({ eventScheduledHere: true });
+          } else {
+            reject(new Error("event not submmitted"));
+          }
+        });
+    });
   }
 
   return (
-    <div>
-      <h1> Your scheduled date is {scheduledDate.toString()}</h1>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <label>
-          First Name
-          <input name="firstName" ref={register} />
-        </label>
+    <body style={{ background: "rgba(131, 196, 197)" }}>
+      <div style={{ padding: "1rem" }}>
+        <TopFormat>
+          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
-        <label>
-          Last Name
-          <input name="lastName" ref={register} />
-        </label>
+          <div
+            style={{
+              justifyContent: "center",
+              alignContent: "center",
+              display: "flex",
+              flexDirection: "row",
+              borderTop: "5px solid grey",
+              margin: 5,
+            }}
+          >
+            <h1
+              style={{
+                // position: "relative",
+                margin: 0,
+                // float: "left",
+                // left: "15%",
+                justifyContent: "center",
+                top: 20,
+              }}
+            >
+              Submit Info Page
+            </h1>
+          </div>
+        </TopFormat>
+        <MainBodyFormat>
+          <h3 style={{ margin: 20 }}>
+            {" "}
+            Your scheduled date is {scheduledDate.toString()}
+          </h3>
 
-        <label>
-          Email
-          <input name="email" ref={register} />
-        </label>
+          <h4 style={{ margin: 20 }}>
+            {" "}
+            Please input your information below to confirm your meeting.
+          </h4>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <label htmlFor="firstName">
+                First Name
+                <Inputformat name="firstName" id="firstName" ref={register} />
+                {/* <input
+                name="firstName"
+                id="firstName"
+                ref={register}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  margin: "8px 0",
+                  display: "inline-block",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  boxSizing: "border-box",
+                }}
+              /> */}
+              </label>
 
-        <label>
-          Comments/Questions?
-          <input name="comments" ref={register} />
-        </label>
+              <label htmlFor="lastName">
+                Last Name
+                <Inputformat name="lastName" id="lastName" ref={register} />
+              </label>
+            </div>
 
-        <div className="form-group">
-          <button type="submit" className="btn btn-primary">
-            Submit Info
-          </button>
-        </div>
-      </form>
-      {true && (
-        <ApolloProvider client={client}>
-          <GetHostEmail />
-        </ApolloProvider>
-      )}
-      <pre id="content"></pre>
-    </div>
+            <div>
+              <label htmlFor="email">Email Address</label>
+              <Inputformat name="email" id="email" ref={register} />
+            </div>
+
+            <div>
+              <label htmlFor="comments">Comments/Questions?</label>
+              <Inputformat name="comments" id="comments" ref={register} />
+            </div>
+
+            <div
+              className="form-group"
+              style={{ display: "flex", flexDirection: "column" }}
+            >
+              <button type="submit" className="btn btn-primary">
+                Submit Info
+              </button>
+            </div>
+          </form>
+        </MainBodyFormat>
+        {true && (
+          <ApolloProvider client={client}>
+            <GetHostEmail />
+          </ApolloProvider>
+        )}
+        <pre id="content"></pre>
+      </div>
+    </body>
   );
 };
 

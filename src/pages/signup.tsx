@@ -21,6 +21,8 @@ import setSeconds from "date-fns/setSeconds";
 import setMinutes from "date-fns/setMinutes";
 import setHours from "date-fns/setHours";
 
+import logo from "./img/meetingGroundLogo.png";
+
 import Redirect, { withRouter } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
@@ -70,6 +72,37 @@ const CalendarCard = styled.div`
   align-items: center;
   border-radius: 15px;
 `;
+
+const LogoCard = styled.img`
+  width: 450px;
+  height: 100px;
+  justify-content: space-around;
+  float: left;
+`;
+
+const TopFormat = styled.div`
+  margin: 0 auto;
+  width: 100%;
+  overflow: auto;
+  display: inline-block;
+  background: white;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+`;
+
+const MainBodyFormat = styled.div`
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  height: 650px;
+  border-radius: 25px;
+`;
+
 const temp: any[] = [];
 let interval: number;
 
@@ -78,6 +111,27 @@ let interval: number;
 //     startDate: date,
 //   });
 // };
+
+type DictionaryItem = {
+  dateKey: string;
+  values: Date[];
+};
+
+const excludeQuery = gql`
+  query($link: String) {
+    list_available_slots(url: $link)
+  }
+`;
+
+function useEvents(link: string) {
+  const { loading, error, data } = useQuery<{ events: DictionaryItem[] }>(
+    excludeQuery,
+    { variables: { link } }
+  );
+  const events = data?.events;
+
+  return { loading, error, events };
+}
 
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
@@ -98,18 +152,95 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
-  let excludeTimeDictionary: { [dateID: string]: Date[] } = {
-    "2020-6-20": [
-      setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-      setHours(setMinutes(new Date(), 30), 18),
-    ],
-    "2020-6-22": [
-      setHours(setMinutes(new Date(), 30), 19),
-      setHours(setMinutes(new Date(), 30), 17),
-    ],
-  };
+  const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
+    DictionaryItem[]
+  >([
+    {
+      dateKey: "2020-6-20",
+      values: [
+        setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+        setHours(setMinutes(new Date(), 30), 18),
+      ],
+    },
+    {
+      dateKey: "2020-6-22",
+      values: [
+        setHours(setMinutes(new Date(), 30), 19),
+        setHours(setMinutes(new Date(), 30), 17),
+      ],
+    },
+  ]);
+  //setExcludeTimeDictionary();
   //let excludeTimeList: Date[] = [];
   const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+
+  //TODO: BELOW IS FOR WHEN DATABASE IS CONNECTED
+  // function useEvents(linkCode: string) {
+  //     return useQuery(GetEventsQuery, variable: { linkCode } );
+  // }
+
+  // function useEvents(linkCode: string) {
+  //   return {
+  //     loading: false,
+  //     error: null,
+  //     events: excludeTimeDictionary,
+  //   };
+  // }
+
+  type ShowSlotsProps = {
+    linkCode: string;
+    data: any;
+  };
+
+  function ShowSlots(showSlotInfo: ShowSlotsProps) {
+    //{ linkCode }: ShowSlotsProps
+    const { loading, error, events } = useEvents(showSlotInfo.linkCode);
+    return loading ? (
+      <div>loading</div>
+    ) : error ? (
+      <div>An Error occurred: {error}</div>
+    ) : (
+      <div
+        className="form-group"
+        style={{ display: "flex", flexDirection: "row" }}
+      >
+        <DatePicker
+          selected={startDate}
+          onChange={(date: Date) => {
+            setStartDate(date);
+            const key = formatDate(date);
+
+            console.log("mykey: " + key);
+            //TODO: change setExcludeTimeList to get from server query
+
+            let tempDictionaryItem = events?.find(
+              (item) => item.dateKey === key
+            );
+            if (tempDictionaryItem !== undefined) {
+              setExcludeTimeList(tempDictionaryItem.values);
+            }
+            console.log(excludeTimeList);
+            setSelect(true);
+          }}
+          timeFormat="HH:mm"
+          timeIntervals={showSlotInfo.data.link.duration}
+          inline
+        />
+        {selectTime && (
+          <DatePicker
+            showTimeSelect
+            showTimeSelectOnly
+            selected={startTime}
+            onChange={(date: Date) => setStartTime(date)}
+            timeFormat="HH:mm"
+            timeIntervals={showSlotInfo.data.link.duration}
+            excludeTimes={excludeTimeList}
+            inline
+          />
+        )}
+      </div>
+    );
+  }
 
   const [selectTime, setSelect] = useState(false);
   function handleSubmit(e: any) {
@@ -136,6 +267,9 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     }
   }
 
+  const formatDate = (date: Date) =>
+    `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { id: urlId.urlid },
@@ -146,48 +280,57 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     ) : error ? (
       <div>An Error occurred: {error}</div>
     ) : (
-      <div className="form-group">
-        <form onSubmit={handleSubmit}>
-          <DatePicker
-            // showTimeSelect
-            selected={startDate}
-            onChange={(date: Date) => {
-              setStartDate(date);
-              let key =
-                date.getFullYear().toString() +
-                "-" +
-                date.getMonth().toString() +
-                "-" +
-                date.getDate().toString();
-              console.log("mykey: " + key);
-              setExcludeTimeList(excludeTimeDictionary[key]);
-              //excludeTimeList = excludeTimeDictionary[key];
-              console.log(excludeTimeList);
-              setSelect(true);
-            }}
-            timeFormat="HH:mm"
-            timeIntervals={data.link.duration}
-            inline
-          />
-          {selectTime && (
-            <DatePicker
-              showTimeSelect
-              showTimeSelectOnly
-              selected={startTime}
-              onChange={(date: Date) => setStartTime(date)}
-              timeFormat="HH:mm"
-              timeIntervals={data.link.duration}
-              excludeTimes={excludeTimeList}
-              inline
-            />
-          )}
-          <div className="form-group">
-            <button type="submit" className="btn btn-primary">
-              Select Date
-            </button>
-          </div>
-        </form>
-      </div>
+      <body style={{ background: "rgba(131, 196, 197)" }}>
+        <div style={{ padding: "1rem" }}>
+          <TopFormat>
+            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+            <div
+              style={{
+                justifyContent: "center",
+                alignContent: "center",
+                display: "flex",
+                flexDirection: "row",
+                borderTop: "5px solid grey",
+                margin: 5,
+              }}
+            >
+              <h1
+                style={{
+                  // position: "relative",
+                  margin: 0,
+                  // float: "left",
+                  // left: "15%",
+                  justifyContent: "center",
+                  top: 20,
+                }}
+              >
+                Signup Page
+              </h1>
+            </div>
+          </TopFormat>
+
+          <MainBodyFormat>
+            <h1 style={{ top: 10, margin: 20 }}>
+              Sign up for your {data.link.duration} minute meeting.
+            </h1>
+            <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
+            <div className="form-group">
+              <form onSubmit={handleSubmit}>
+                <ShowSlots linkCode={urlId.urlid} data={data} />
+
+                <div
+                  className="form-group"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <button type="submit" className="btn btn-primary">
+                    Select Date
+                  </button>
+                </div>
+              </form>
+            </div>
+          </MainBodyFormat>
+        </div>
+      </body>
     );
   }
 
@@ -195,14 +338,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   return (
     <ApolloProvider client={client}>
-      <SignUpServer />
-
-      <CalendarCard>
-        <IntervalSetup />
-      </CalendarCard>
-      {/* <CalendarCard>
-        <MyCalendar myList={temp} />
-      </CalendarCard> */}
+      <IntervalSetup />
     </ApolloProvider>
   );
 };
