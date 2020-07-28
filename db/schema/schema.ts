@@ -15,7 +15,7 @@ const {
   GraphQLNonNull,
 } = graphql;
 
-async function getRefreshToken(code) {
+async function getRefreshToken(code: any) {
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       code,
@@ -39,7 +39,7 @@ async function getRefreshToken(code) {
 }
 
 // Types
-const LinkType = new GraphQLObjectType({
+const LinkType: graphql.GraphQLObjectType<any, any> = new GraphQLObjectType({
   name: "Link",
   fields: () => ({
     id: { type: GraphQLID },
@@ -61,7 +61,7 @@ const HostType = new GraphQLObjectType({
     Fname: { type: GraphQLString },
     Lname: { type: GraphQLString },
     email: { type: GraphQLString },
-    auth_code: { type: GraphQLString },
+    refresh_token: { type: GraphQLString },
     urls_sent: {
       type: new GraphQLList(LinkType),
       resolve(parent, args) {
@@ -158,18 +158,28 @@ const Mutation = new GraphQLObjectType({
         auth_code: { type: new GraphQLNonNull(GraphQLString) },
       },
       async resolve(parent, { Fname, Lname, email, auth_code }) {
-        console.log("1Variables are: ", { Fname, Lname, email, auth_code });
+        console.log("Variables are: ", { Fname, Lname, email, auth_code });
         const hostExists = await checkHostsExists(email);
-        const refresh_token = await getRefreshToken(auth_code);
-        if (!hostExists) {
-          const host = new Host({
-            Fname: Fname,
-            Lname: Lname,
-            email: email,
-            refresh_token,
-          });
-          return host.save(); //save to the database and return results
-        }
+        const refresh: any = await getRefreshToken(auth_code).then(() => {
+          if (!hostExists) {
+            const host = new Host({
+              Fname: Fname,
+              Lname: Lname,
+              email: email,
+              refresh_token: refresh,
+            });
+            return host.save(); //save to the database and return results
+          }
+        });
+        // if (!hostExists) {
+        //   const host = new Host({
+        //     Fname: Fname,
+        //     Lname: Lname,
+        //     email: email,
+        //     refresh_token: refresh,
+        //   });
+        //   return host.save(); //save to the database and return results
+        // }
         return null;
       },
     },

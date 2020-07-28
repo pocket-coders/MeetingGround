@@ -36,16 +36,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-// import { config } from "../../src/apiGoogleconfig.json";
-// import moment from "moment";
 // import setSeconds from "date-fns/setSeconds";
 // import setMinutes from "date-fns/setMinutes";
 // import setHours from "date-fns/setHours";
-// import { google } from "googleapis";
 var config = require("./apiGoogleconfig.json");
 var moment = require("moment");
 var axios = require("axios");
-// const google = require("googleapis");
+var google = require("googleapis").google;
+var oauth2Client = new google.auth.OAuth2(config.clientId, config.clientSecret, config.redirectUri);
+google.options({
+    auth: oauth2Client,
+    http2: true
+});
 function getAccessToken(refresh_token) {
     return __awaiter(this, void 0, void 0, function () {
         var response, error_1;
@@ -55,17 +57,13 @@ function getAccessToken(refresh_token) {
                     _a.trys.push([0, 2, , 3]);
                     return [4 /*yield*/, axios.post("https://oauth2.googleapis.com/token", {
                             refresh_token: refresh_token,
-                            client_id: "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
-                            client_secret: "vpM3s6IXDLcmZtNpkOFbeQMg",
-                            redirect_uri: "http://localhost:3000",
+                            client_id: config.clientId,
+                            client_secret: config.clientSecret,
+                            redirect_uri: config.redirectUri,
                             grant_type: "refresh_token"
                         })];
                 case 1:
                     response = _a.sent();
-                    // console.log("acccess");
-                    // console.log(response.data.access_token);
-                    // console.log(response.status);
-                    // console.log(response.statusText);
                     return [2 /*return*/, Promise.resolve(response.data.access_token)];
                 case 2:
                     error_1 = _a.sent();
@@ -76,60 +74,181 @@ function getAccessToken(refresh_token) {
         });
     });
 }
-function slotQuery(refreshCode) {
+var calendar = google.calendar("v3");
+function getList() {
     return __awaiter(this, void 0, void 0, function () {
-        var accessToken, loading;
+        var response, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, getAccessToken(refreshCode)];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, calendar.events.list({
+                            calendarId: "primary",
+                            timeMin: new Date().toISOString(),
+                            showDeleted: false,
+                            singleEvents: true,
+                            maxResults: 10,
+                            orderBy: "startTime",
+                            auth: oauth2Client
+                        })];
                 case 1:
-                    accessToken = _a.sent();
-                    console.log(accessToken);
-                    loading = gapi.load("client:auth2", function () {
-                        gapi.client
-                            .init({
-                            apiKey: config.config.apiKey,
-                            clientId: config.config.clientId,
-                            discoveryDocs: config.config.discoveryDocs,
-                            scope: config.config.scope
-                        })
-                            .then(function () {
-                            console.log("SET ACCESS TOKEN");
-                            gapi.client.setToken({
-                                access_token: accessToken
-                            });
-                        }, function (error) {
-                            console.log("An error in Accessing Account");
-                        })
-                            .then(function () {
-                            console.log("CREATE EVENT LIST");
-                            gapi.client.calendar.events
-                                .list({
-                                calendarId: "primary",
-                                timeMin: new Date().toISOString(),
-                                showDeleted: false,
-                                singleEvents: true,
-                                maxResults: 10,
-                                orderBy: "startTime"
-                            })
-                                .then(function (response) {
-                                console.log("CREATE ARRAY");
-                                var events = response.result.items;
-                                var rv = events.map(function (event) { return ({
-                                    start: moment.utc(event.start.dateTime).toDate().toISOString(),
-                                    end: moment.utc(event.end.dateTime).toDate().toISOString()
-                                }); });
-                                rv.map(function (item) {
-                                    console.log(item);
-                                });
-                                //return rv;
-                            });
-                        });
-                    });
-                    return [2 /*return*/, loading];
+                    response = _a.sent();
+                    return [2 /*return*/, Promise.resolve(response.data)];
+                case 2:
+                    err_1 = _a.sent();
+                    console.log("an error in the list");
+                    console.log(err_1);
+                    return [2 /*return*/, Promise.resolve([])];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
-slotQuery("1//06UBcPVmhaK0PCgYIARAAGAYSNwF-L9IrW4nBJnd6zOqWTh3jDgWHq3iCG5V_v5m-loT5yHpTJJJI3ni8WJg131MCSM3pZYOM-Vs");
+function slotQuery(refreshCode) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            // return Promise.resolve([
+            //   {
+            //     dateKey: "2020-6-20",
+            //     values: [
+            //       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+            //       setHours(setMinutes(new Date(), 30), 18),
+            //     ],
+            //   },
+            //   {
+            //     dateKey: "2020-6-22",
+            //     values: [
+            //       setHours(setMinutes(new Date(), 30), 19),
+            //       setHours(setMinutes(new Date(), 30), 17),
+            //     ],
+            //   },
+            // ]);
+            getAccessToken(refreshCode)
+                .then(function (res) {
+                oauth2Client.setCredentials({
+                    access_token: res,
+                    scope: config.scope
+                });
+                console.log("used this token: " + res);
+            })
+                .then(function () {
+                getList().then(function (res) {
+                    console.log("CREATE ARRAY");
+                    var events = res;
+                    // console.log(res);
+                    var rv = events.map(function (event) { return ({
+                        start: moment.utc(event.start.dateTime).toDate().toISOString(),
+                        end: moment.utc(event.end.dateTime).toDate().toISOString()
+                    }); });
+                    rv.map(function (item) {
+                        console.log(item);
+                    });
+                });
+                // console.log(res);
+            });
+            return [2 /*return*/];
+        });
+    });
+}
+slotQuery("1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o");
+function invite(refreshToken, duration, email, userName, comment, startTime) {
+    return __awaiter(this, void 0, void 0, function () {
+        var access;
+        return __generator(this, function (_a) {
+            access = getAccessToken(refreshToken)
+                .then(function (res) {
+                oauth2Client.setCredentials({
+                    access_token: res,
+                    scope: config.scope
+                });
+                console.log("used this token: " + res);
+            })
+                .then(function () {
+                sendInvite(duration, email, userName, comment, startTime);
+            });
+            return [2 /*return*/];
+        });
+    });
+}
+function ISODateString(d) {
+    function pad(n) {
+        return n < 10 ? "0" + n : n;
+    }
+    return (d.getFullYear() +
+        "-" +
+        pad(d.getMonth() + 1) +
+        "-" +
+        pad(d.getDate()) +
+        "T" +
+        pad(d.getHours()) +
+        ":" +
+        pad(d.getMinutes()) +
+        ":" +
+        pad(d.getSeconds()) +
+        "-" +
+        pad(d.getTimezoneOffset() / 60) +
+        ":00");
+}
+function sendInvite(duration, email, userName, comment, startTime) {
+    return __awaiter(this, void 0, void 0, function () {
+        var start, timeZone, event, response, err_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    start = startTime.toString();
+                    timeZone = startTime.getTimezoneOffset().toString();
+                    console.log(start);
+                    console.log(timeZone);
+                    event = {
+                        summary: "Meeting with " + userName,
+                        location: "Online",
+                        description: comment,
+                        start: {
+                            // date: scheduledDate.toISOString(),
+                            dateTime: ISODateString(startTime),
+                            timeZone: "Etc/UTC"
+                        },
+                        end: {
+                            // date: scheduledDate.toISOString(),
+                            dateTime: ISODateString(new Date(startTime.getTime() + 60 * 1000 * duration)),
+                            timeZone: "Etc/UTC"
+                        },
+                        recurrence: ["RRULE:FREQ=DAILY;COUNT=1"],
+                        attendees: [{ email: email }],
+                        visibility: "default",
+                        reminders: {
+                            useDefault: false,
+                            overrides: [
+                                { method: "email", minutes: 24 * 60 },
+                                { method: "popup", minutes: 10 },
+                            ]
+                        }
+                    };
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, calendar.events
+                            .insert({
+                            calendarId: "primary",
+                            resource: event,
+                            sendNotifications: true,
+                            sendUpdates: "all"
+                        })
+                            .execute(function (event) {
+                            console.log("Event created: " + event.status);
+                            // result = event.status.toLocaleString() === "complete";
+                        })];
+                case 2:
+                    response = _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    err_2 = _a.sent();
+                    console.log("an error in the list");
+                    console.log(err_2);
+                    return [2 /*return*/, Promise.resolve()];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
 exports["default"] = slotQuery;

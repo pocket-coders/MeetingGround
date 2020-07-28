@@ -1,28 +1,31 @@
-// import { config } from "../../src/apiGoogleconfig.json";
-// import moment from "moment";
 // import setSeconds from "date-fns/setSeconds";
 // import setMinutes from "date-fns/setMinutes";
 // import setHours from "date-fns/setHours";
-// import { google } from "googleapis";
 const config = require("./apiGoogleconfig.json");
 const moment = require("moment");
 const axios = require("axios");
-// const google = require("googleapis");
 
-async function getAccessToken(refresh_token) {
+const { google } = require("googleapis");
+const oauth2Client = new google.auth.OAuth2(
+  config.clientId,
+  config.clientSecret,
+  config.redirectUri
+);
+
+google.options({
+  auth: oauth2Client,
+  http2: true,
+});
+
+async function getAccessToken(refresh_token: any) {
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       refresh_token,
-      client_id:
-        "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
-      client_secret: "vpM3s6IXDLcmZtNpkOFbeQMg",
-      redirect_uri: "http://localhost:3000",
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      redirect_uri: config.redirectUri,
       grant_type: "refresh_token",
     });
-    // console.log("acccess");
-    // console.log(response.data.access_token);
-    // console.log(response.status);
-    // console.log(response.statusText);
     return Promise.resolve(response.data.access_token);
   } catch (error) {
     console.error(
@@ -37,6 +40,26 @@ type SlotTypeEvent = {
   start: string;
   end: string;
 };
+
+const calendar = google.calendar("v3");
+async function getList() {
+  try {
+    const response = await calendar.events.list({
+      calendarId: "primary",
+      timeMin: new Date().toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 10,
+      orderBy: "startTime",
+      auth: oauth2Client,
+    });
+    return Promise.resolve(response.data);
+  } catch (err) {
+    console.log("an error in the list");
+    console.log(err);
+    return Promise.resolve([]);
+  }
+}
 
 async function slotQuery(refreshCode: string) {
   // return Promise.resolve([
@@ -56,60 +79,135 @@ async function slotQuery(refreshCode: string) {
   //   },
   // ]);
 
-  const accessToken = await getAccessToken(refreshCode);
-  console.log(accessToken);
-
-  const loading = gapi.load("client:auth2", () => {
-    gapi.client
-      .init({
-        apiKey: config.config.apiKey,
-        clientId: config.config.clientId,
-        discoveryDocs: config.config.discoveryDocs,
-        scope: config.config.scope,
-      })
-      .then(
-        () => {
-          console.log("SET ACCESS TOKEN");
-          gapi.client.setToken({
-            access_token: accessToken,
-          });
-        },
-        function (error: any) {
-          console.log("An error in Accessing Account");
-        }
-      )
-      .then(() => {
-        console.log("CREATE EVENT LIST");
-        gapi.client.calendar.events
-          .list({
-            calendarId: "primary",
-            timeMin: new Date().toISOString(),
-            showDeleted: false,
-            singleEvents: true,
-            maxResults: 10,
-            orderBy: "startTime",
-          })
-          .then((response: any) => {
-            console.log("CREATE ARRAY");
-            const events: any[] = response.result.items;
-            const rv: SlotTypeEvent[] = events.map((event: any) => ({
-              start: moment.utc(event.start.dateTime).toDate().toISOString(),
-              end: moment.utc(event.end.dateTime).toDate().toISOString(),
-            }));
-            rv.map((item: any) => {
-              console.log(item);
-            });
-
-            //return rv;
-          });
+  getAccessToken(refreshCode)
+    .then((res) => {
+      oauth2Client.setCredentials({
+        access_token: res,
+        scope: config.scope,
       });
-  });
-
-  return loading;
+      console.log("used this token: " + res);
+    })
+    .then(() => {
+      getList().then((res: any) => {
+        console.log("CREATE ARRAY");
+        const events: any[] = res;
+        // console.log(res);
+        const rv = events.map((event: any) => ({
+          start: moment.utc(event.start.dateTime).toDate().toISOString(),
+          end: moment.utc(event.end.dateTime).toDate().toISOString(),
+        }));
+        rv.map((item: any) => {
+          console.log(item);
+        });
+      });
+      // console.log(res);
+    });
 }
 
 slotQuery(
-  "1//06UBcPVmhaK0PCgYIARAAGAYSNwF-L9IrW4nBJnd6zOqWTh3jDgWHq3iCG5V_v5m-loT5yHpTJJJI3ni8WJg131MCSM3pZYOM-Vs"
+  "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
 );
+
+async function invite(
+  refreshToken: string,
+  duration: number,
+  email: string,
+  userName: string,
+  comment: string,
+  startTime: Date
+) {
+  const access = getAccessToken(refreshToken)
+    .then((res) => {
+      oauth2Client.setCredentials({
+        access_token: res,
+        scope: config.scope,
+      });
+      console.log("used this token: " + res);
+    })
+    .then(() => {
+      sendInvite(duration, email, userName, comment, startTime);
+    });
+}
+
+function ISODateString(d: Date) {
+  function pad(n: number) {
+    return n < 10 ? "0" + n : n;
+  }
+  return (
+    d.getFullYear() +
+    "-" +
+    pad(d.getMonth() + 1) +
+    "-" +
+    pad(d.getDate()) +
+    "T" +
+    pad(d.getHours()) +
+    ":" +
+    pad(d.getMinutes()) +
+    ":" +
+    pad(d.getSeconds()) +
+    "-" +
+    pad(d.getTimezoneOffset() / 60) +
+    ":00"
+  );
+}
+
+async function sendInvite(
+  duration: number,
+  email: string,
+  userName: string,
+  comment: string,
+  startTime: Date
+) {
+  // let result: boolean;
+  const start: string = startTime.toString();
+  const timeZone: string = startTime.getTimezoneOffset().toString();
+  console.log(start);
+  console.log(timeZone);
+  const event = {
+    summary: "Meeting with " + userName,
+    location: "Online",
+    description: comment,
+    start: {
+      // date: scheduledDate.toISOString(),
+      dateTime: ISODateString(startTime),
+      timeZone: "Etc/UTC",
+    },
+    end: {
+      // date: scheduledDate.toISOString(),
+      dateTime: ISODateString(
+        new Date(startTime.getTime() + 60 * 1000 * duration)
+      ),
+      timeZone: "Etc/UTC",
+    },
+    recurrence: ["RRULE:FREQ=DAILY;COUNT=1"],
+    attendees: [{ email: email }],
+    visibility: "default",
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: "email", minutes: 24 * 60 },
+        { method: "popup", minutes: 10 },
+      ],
+    },
+  };
+
+  try {
+    const response = await calendar.events
+      .insert({
+        calendarId: "primary",
+        resource: event,
+        sendNotifications: true,
+        sendUpdates: "all",
+      })
+      .execute((event: any) => {
+        console.log("Event created: " + event.status);
+        // result = event.status.toLocaleString() === "complete";
+      });
+  } catch (err) {
+    console.log("an error in the list");
+    console.log(err);
+    return Promise.resolve();
+  }
+}
 
 export default slotQuery;

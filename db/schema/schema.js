@@ -96,7 +96,7 @@ var HostType = new GraphQLObjectType({
         Fname: { type: GraphQLString },
         Lname: { type: GraphQLString },
         email: { type: GraphQLString },
-        auth_code: { type: GraphQLString },
+        refresh_token: { type: GraphQLString },
         urls_sent: {
             type: new GraphQLList(LinkType),
             resolve: function (parent, args) {
@@ -211,26 +211,36 @@ var Mutation = new GraphQLObjectType({
             resolve: function (parent, _a) {
                 var Fname = _a.Fname, Lname = _a.Lname, email = _a.email, auth_code = _a.auth_code;
                 return __awaiter(this, void 0, void 0, function () {
-                    var hostExists, refresh_token, host;
+                    var hostExists, refresh;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
-                                console.log("1Variables are: ", { Fname: Fname, Lname: Lname, email: email, auth_code: auth_code });
+                                console.log("Variables are: ", { Fname: Fname, Lname: Lname, email: email, auth_code: auth_code });
                                 return [4 /*yield*/, checkHostsExists(email)];
                             case 1:
                                 hostExists = _b.sent();
-                                return [4 /*yield*/, getRefreshToken(auth_code)];
+                                return [4 /*yield*/, getRefreshToken(auth_code).then(function () {
+                                        if (!hostExists) {
+                                            var host = new Host({
+                                                Fname: Fname,
+                                                Lname: Lname,
+                                                email: email,
+                                                refresh_token: refresh
+                                            });
+                                            return host.save(); //save to the database and return results
+                                        }
+                                    })];
                             case 2:
-                                refresh_token = _b.sent();
-                                if (!hostExists) {
-                                    host = new Host({
-                                        Fname: Fname,
-                                        Lname: Lname,
-                                        email: email,
-                                        refresh_token: refresh_token
-                                    });
-                                    return [2 /*return*/, host.save()]; //save to the database and return results
-                                }
+                                refresh = _b.sent();
+                                // if (!hostExists) {
+                                //   const host = new Host({
+                                //     Fname: Fname,
+                                //     Lname: Lname,
+                                //     email: email,
+                                //     refresh_token: refresh,
+                                //   });
+                                //   return host.save(); //save to the database and return results
+                                // }
                                 return [2 /*return*/, null];
                         }
                     });

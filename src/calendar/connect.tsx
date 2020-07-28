@@ -4,25 +4,73 @@ import moment from "moment";
 import MyCalendar from "../pages/Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-// const getter = require("express");
+import logo from "../pages/img/meetingGroundLogo.png";
+import { Link } from "react-router-dom";
+import { useMutation } from "react-apollo";
+import { gql } from "apollo-boost";
 
 //yarn add @types/gapi
 //yarn add @types/gapi.auth2
 //yarn add @types/gapi.client.calendar
 
+const AppendHostToDB = gql`
+  mutation addHost(
+    $fname: String!
+    $lname: String!
+    $email: String!
+    $auth_code: String!
+  ) {
+    addHost(
+      Fname: $fname
+      Lname: $lname
+      email: $email
+      auth_code: $auth_code
+    ) {
+      Lname
+      email
+    }
+  }
+`;
+
 const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
-  const [access_token, setAccessToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
+  // const [refreshToken, setRefreshToken] = useState("");
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
+  const [auth_code, setAuthcode] = useState(""); //user Google Offline Access code
   const [message, setMessage] = useState("");
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [authorizeButton, setAuthorizeButton] = useState("");
   const [signoutButton, setSignoutButton] = useState("");
+  const [extention, setExtention] = useState("");
+  const [mutate] = useMutation(AppendHostToDB);
+
+  useEffect(() => {
+    async function addHostToDb() {
+      // auth_code --> Google Offline Access code
+      const arg = await mutate({
+        variables: {
+          fname: fname,
+          lname: lname,
+          email: email,
+          auth_code: auth_code,
+        },
+      });
+      console.log(arg);
+    }
+    if (auth_code && fname && lname && email) {
+      addHostToDb()
+        .then(() => {
+          console.log("appended successfully");
+        })
+        .catch((err) => {
+          console.log("an error happened");
+        });
+    }
+  }, [auth_code, fname, lname, email, mutate]);
 
   /**
    *  On load, called to load the auth2 library and API client library.
@@ -72,40 +120,40 @@ const ConnectPage = () => {
    */
   function handleAuthClick(event: any) {
     // Granting access when the user is offline
-    gapi.auth2
-      .getAuthInstance()
-      .grantOfflineAccess()
-      .then(function (response: any) {
-        gapi.auth2.getAuthInstance().signIn();
-        setRefreshToken(response.code);
-        if (response["code"]) {
-          // Hide the sign-in button now that the user is authorized, for example:
-          setAuthorizeButton("none");
-          //$("#signinButton").attr("style", "display: none");
-          console.log(response);
-
-          // Send the code to the server
-          // getter.ajax({
-          //   type: "POST",
-          //   url: "http://example.com/storeauthcode",
-          //   // Always include an `X-Requested-With` header in every AJAX request,
-          //   // to protect against CSRF attacks.
-          //   headers: {
-          //     "X-Requested-With": "XMLHttpRequest",
-          //   },
-          //   contentType: "application/octet-stream; charset=utf-8",
-          //   success: function (result: any) {
-          //     // Handle or verify the server response.
-          //   },
-          //   processData: false,
-          //   data: response["code"],
-          // });
-        } else {
-          // THERE WAS AN ERROR
-          console.log("THERE WAS AN ERROR");
-        }
+    gapi.client
+      .init({
+        apiKey: config.config.apiKey,
+        clientId: config.config.clientId,
+        discoveryDocs: config.config.discoveryDocs,
+        scope: config.config.scope,
+      })
+      .then(() => {
+        gapi.auth2
+          .getAuthInstance()
+          .grantOfflineAccess()
+          .then(function (response: any) {
+            //auth code? not refresh token
+            // setRefreshToken(response.code);
+            gapi.auth2.getAuthInstance().signIn();
+            // setAuthcode(
+            //   gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+            //     .access_token
+            // );
+            if (response.code) {
+              // Hide the sign-in button now that the user is authorized, for example:
+              setAuthorizeButton("none");
+              //$("#signinButton").attr("style", "display: none");
+              console.log("response code: ");
+              console.log(response);
+              setAuthcode(response.code);
+              console.log("After host added/found");
+            } else {
+              // THERE WAS AN ERROR
+              console.log("THERE WAS AN ERROR");
+            }
+          });
+        //gapi.auth2.getAuthInstance().signIn();
       });
-    //gapi.auth2.getAuthInstance().signIn();
   }
 
   /**
@@ -123,11 +171,8 @@ const ConnectPage = () => {
   function updateSigninStatus(isSignedIn: boolean) {
     if (isSignedIn) {
       setAuthorizeButton("none");
-      setSignoutButton("block");
-      setAccessToken(
-        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
-          .access_token
-      );
+      setSignoutButton("");
+      //setSignoutButton("block");
       setIsSigned(true);
       setName(
         gapi.auth2
@@ -164,6 +209,9 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
+      console.log(email);
+      console.log(fname);
+      console.log(lname);
       listUpcomingEvents();
       console.log("SIGNED IN");
     } else {
@@ -174,7 +222,8 @@ const ConnectPage = () => {
       setFname("");
       setLname("");
       setEmail("");
-      setAuthorizeButton("block");
+      setAuthorizeButton("");
+      //setAuthorizeButton("block");
       setSignoutButton("none");
     }
   }
@@ -194,7 +243,7 @@ const ConnectPage = () => {
   const CalendarCard = styled.div`
     margin: 0 auto;
     width: 1000px;
-    height: 1000px;
+    height: 800px;
     align-items: center;
     border-radius: 15px;
   `;
@@ -254,7 +303,7 @@ const ConnectPage = () => {
               message + event.summary + " (" + when + ")" + "\n";
             setMessage(temp);
             // message += temp;
-            appendPre(event.summary + " (" + when + ")");
+            // appendPre(event.summary + " (" + when + ")");
           }
         } else {
           setMessage("No upcoming events found." + "\n");
@@ -266,49 +315,165 @@ const ConnectPage = () => {
 
   // handleClientLoad();
 
-  return (
-    <div style={{ padding: "1rem" }}>
-      <div>
-        <img id="logo" src="./logo.png" alt="Meeting Ground Logo" />
-        <h1>Welcome to Meeting Ground</h1>
-        <h2>Where Meetings hit the Ground</h2>
-        <small>Main Page</small>
-      </div>
-      <div>
-        <button
-          id="authorize_button"
-          onClick={handleAuthClick}
-          style={{ display: authorizeButton }}
-        >
-          Sign in
-        </button>
-        <button
-          id="signout_button"
-          onClick={handleSignoutClick}
-          style={{ display: signoutButton }}
-        >
-          Sign Out
-        </button>
-      </div>
+  const LogoCard = styled.img`
+    width: 450px;
+    height: 100px;
+    justify-content: space-around;
+    float: left;
+    // text-align: center;
+    // resizemode: "contain";
+    // left: 50%;
+    // transform: translate(-50%, -50%);
+  `;
 
-      {isSigned && (
-        <div>
+  const TopFormat = styled.div`
+    margin: 0 auto;
+    width: 100%;
+    overflow: auto;
+    display: inline-block;
+    background: white;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+  `;
+
+  const HomePageFormat = styled.div`
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 1000px;
+    text-align: center;
+  `;
+
+  const WelcomeFormat = styled.div`
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 650px;
+    text-align: center;
+  `;
+
+  useEffect(() => {
+    // check if email is already in the data base and allow made uo email
+    setExtention("/home/" + email.split("@")[0]);
+  }, [email]);
+
+  return (
+    <body style={{ background: "rgba(131, 196, 197)" }}>
+      <div style={{ padding: "1rem" }}>
+        <TopFormat>
           <div>
-            <h1>Welcome {name}</h1>
-            <img src={picUrl} alt="Avatar." />
-            <p>
-              <a id="continue" href="http://localhost:3000/home">
-                continue to Meeting Ground
-              </a>
-            </p>
+            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+
+            <button
+              className="btn btn-primary"
+              id="authorize_button"
+              onClick={handleAuthClick}
+              style={{
+                height: "30%",
+                justifyContent: "center",
+                alignSelf: "center",
+                display: authorizeButton,
+                float: "right",
+                margin: 30,
+              }}
+            >
+              Sign in
+            </button>
+            <button
+              className="btn btn-danger"
+              id="signout_button"
+              onClick={handleSignoutClick}
+              style={{
+                height: "30%",
+                justifyContent: "center",
+                alignContent: "center",
+                display: signoutButton,
+                float: "right",
+                margin: 30,
+              }}
+            >
+              Sign Out
+            </button>
           </div>
-          <pre id="content"></pre>
-          <CalendarCard>
-            <MyCalendar myList={myEvents} />
-          </CalendarCard>
-        </div>
-      )}
-    </div>
+          <div
+            style={{
+              justifyContent: "center",
+              alignContent: "center",
+              display: "flex",
+              flexDirection: "row",
+              borderTop: "5px solid grey",
+              margin: 5,
+            }}
+          >
+            <h1
+              style={{
+                // position: "relative",
+                //width: 200,
+                margin: 0,
+                // float: "left",
+                // left: "15%",
+                justifyContent: "center",
+                top: 20,
+              }}
+            >
+              Main Page
+            </h1>
+          </div>
+        </TopFormat>
+
+        {!isSigned && (
+          <TopFormat>
+            <WelcomeFormat>
+              <div>
+                <h1>HELLO!</h1>
+
+                <h3> Please sign in to use Meeting Ground</h3>
+              </div>
+            </WelcomeFormat>
+          </TopFormat>
+        )}
+
+        {isSigned && (
+          <TopFormat>
+            <HomePageFormat>
+              <h1
+                style={{
+                  margin: 25,
+                }}
+              >
+                Welcome {name}
+              </h1>
+              <img src={picUrl} alt="Avatar." />
+              <div
+                style={{ margin: 20, display: "flex", flexDirection: "column" }}
+              >
+                <Link to={extention} className="btn btn-success" type="button">
+                  Continue to Meeting Ground Home
+                </Link>
+              </div>
+              <h3>Your upcoming events: </h3>
+              <pre
+                id="content"
+                style={{
+                  height: 100,
+                }}
+              ></pre>
+              <CalendarCard>
+                <MyCalendar myList={myEvents} />
+              </CalendarCard>
+            </HomePageFormat>
+          </TopFormat>
+        )}
+      </div>
+    </body>
   );
 };
 export default ConnectPage;
