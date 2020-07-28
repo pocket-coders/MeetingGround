@@ -1,4 +1,4 @@
-/*users.jsx*/
+/*home.jsx*/
 import React from "react";
 import * as config from "../apiGoogleconfig.json";
 import ScheduleEngine from "./ScheduleEngine";

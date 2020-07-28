@@ -1,28 +1,44 @@
-// import { config } from "../../src/apiGoogleconfig.json";
-// import moment from "moment";
 // import setSeconds from "date-fns/setSeconds";
 // import setMinutes from "date-fns/setMinutes";
 // import setHours from "date-fns/setHours";
-// import { google } from "googleapis";
 const config = require("./apiGoogleconfig.json");
 const moment = require("moment");
 const axios = require("axios");
-// const google = require("googleapis");
 
-async function getAccessToken(refresh_token) {
+const clientId =
+  "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com";
+// const apiKey = "AIzaSyBp8aAD-xwmvna9o1InxK23wkpywLWm0oc";
+const scope = [
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/calendar.settings.readonly",
+  "https://www.googleapis.com/auth/calendar.events",
+];
+const clientSecret = "vpM3s6IXDLcmZtNpkOFbeQMg";
+const redirectUri = "http://localhost:3000";
+
+const { google } = require("googleapis");
+const oauth2Client = new google.auth.OAuth2(
+  clientId,
+  clientSecret,
+  redirectUri
+);
+
+google.options({
+  auth: oauth2Client,
+  http2: true,
+});
+
+async function getAccessToken(refresh_token: any) {
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       refresh_token,
-      client_id:
-        "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
-      client_secret: "vpM3s6IXDLcmZtNpkOFbeQMg",
-      redirect_uri: "http://localhost:3000",
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
       grant_type: "refresh_token",
     });
-    // console.log("acccess");
-    // console.log(response.data.access_token);
-    // console.log(response.status);
-    // console.log(response.statusText);
     return Promise.resolve(response.data.access_token);
   } catch (error) {
     console.error(
@@ -37,6 +53,51 @@ type SlotTypeEvent = {
   start: string;
   end: string;
 };
+
+const calendar = google.calendar("v3");
+async function getList() {
+  try {
+    const response = await calendar.events.list({
+      calendarId: "primary",
+      timeMin: new Date().toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 10,
+      orderBy: "startTime",
+      auth: oauth2Client,
+    });
+    return Promise.resolve(response.data.items);
+  } catch (err) {
+    console.log("an error in the list");
+    console.log(err);
+    return Promise.resolve([]);
+  }
+}
+
+function roundStartTimeQuarterHour(time: Date) {
+  const timeToReturn = time;
+
+  timeToReturn.setMilliseconds(
+    Math.floor(timeToReturn.getMilliseconds() / 1000) * 1000
+  );
+  timeToReturn.setSeconds(Math.floor(timeToReturn.getSeconds() / 60) * 60);
+  timeToReturn.setMinutes(Math.floor(timeToReturn.getMinutes() / 15) * 15);
+  return timeToReturn;
+}
+
+function roundEndTimeQuarterHour(time: Date) {
+  const timeToReturn = time;
+
+  timeToReturn.setMilliseconds(
+    Math.ceil(timeToReturn.getMilliseconds() / 1000) * 1000
+  );
+  timeToReturn.setSeconds(Math.ceil(timeToReturn.getSeconds() / 60) * 60);
+  timeToReturn.setMinutes(Math.ceil(timeToReturn.getMinutes() / 15) * 15);
+  return timeToReturn;
+}
+
+const formatDate = (date: Date) =>
+  `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
 async function slotQuery(refreshCode: string) {
   // return Promise.resolve([
@@ -56,60 +117,78 @@ async function slotQuery(refreshCode: string) {
   //   },
   // ]);
 
-  const accessToken = await getAccessToken(refreshCode);
-  console.log(accessToken);
+  type DictionaryItem = {
+    dateKey: string;
+    values: Date[];
+  };
 
-  const loading = gapi.load("client:auth2", () => {
-    gapi.client
-      .init({
-        apiKey: config.config.apiKey,
-        clientId: config.config.clientId,
-        discoveryDocs: config.config.discoveryDocs,
-        scope: config.config.scope,
-      })
-      .then(
-        () => {
-          console.log("SET ACCESS TOKEN");
-          gapi.client.setToken({
-            access_token: accessToken,
-          });
-        },
-        function (error: any) {
-          console.log("An error in Accessing Account");
-        }
-      )
-      .then(() => {
-        console.log("CREATE EVENT LIST");
-        gapi.client.calendar.events
-          .list({
-            calendarId: "primary",
-            timeMin: new Date().toISOString(),
-            showDeleted: false,
-            singleEvents: true,
-            maxResults: 10,
-            orderBy: "startTime",
-          })
-          .then((response: any) => {
-            console.log("CREATE ARRAY");
-            const events: any[] = response.result.items;
-            const rv: SlotTypeEvent[] = events.map((event: any) => ({
-              start: moment.utc(event.start.dateTime).toDate().toISOString(),
-              end: moment.utc(event.end.dateTime).toDate().toISOString(),
-            }));
-            rv.map((item: any) => {
-              console.log(item);
-            });
-
-            //return rv;
-          });
+  getAccessToken(refreshCode)
+    .then((res) => {
+      oauth2Client.setCredentials({
+        access_token: res,
+        scope: scope,
       });
-  });
+      console.log("used this token: " + res);
+    })
+    .then(() => {
+      getList().then((res: any) => {
+        console.log("CREATE ARRAY");
+        const events: any[] = res;
+        // console.log(res);
+        const rv = events.map((event: any) => ({
+          start: moment.utc(event.start.dateTime).toDate(),
+          end: moment.utc(event.end.dateTime).toDate(),
+        }));
+        rv.map((item: any) => {
+          console.log(item);
+        });
+        let resultArray: DictionaryItem[] = [];
+        try {
+          rv.map((item: any) => {
+            let myDateKey: string = formatDate(item.start);
+            item.start = roundStartTimeQuarterHour(item.start);
+            item.end = roundStartTimeQuarterHour(item.end);
 
-  return loading;
+            let currTimeToBeAdded = item.start;
+
+            let foundDate = resultArray?.find(
+              (item) => item.dateKey === myDateKey
+            );
+            if (foundDate) {
+              while (currTimeToBeAdded < item.end) {
+                foundDate.values.push(currTimeToBeAdded);
+                currTimeToBeAdded.setTime(
+                  currTimeToBeAdded.getTime() + 15 * 1000 * 60
+                );
+              }
+            } else {
+              let tempObject: DictionaryItem = {
+                dateKey: myDateKey,
+                values: [],
+              };
+              while (currTimeToBeAdded < item.end) {
+                tempObject.values.push(currTimeToBeAdded);
+                currTimeToBeAdded.setTime(
+                  currTimeToBeAdded.getTime() + 15 * 1000 * 60
+                );
+              }
+              resultArray.push(tempObject);
+            }
+            console.log(resultArray);
+            return Promise.resolve(resultArray);
+          });
+        } catch (err) {
+          console.log("an error in the mapping of result array dictionary");
+          console.log(err);
+          return Promise.resolve(<DictionaryItem[]>[]);
+        }
+      });
+      // console.log(res);
+    });
 }
 
 slotQuery(
-  "1//06UBcPVmhaK0PCgYIARAAGAYSNwF-L9IrW4nBJnd6zOqWTh3jDgWHq3iCG5V_v5m-loT5yHpTJJJI3ni8WJg131MCSM3pZYOM-Vs"
+  "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
 );
 
 export default slotQuery;

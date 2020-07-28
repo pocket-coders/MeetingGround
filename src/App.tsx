@@ -42,7 +42,7 @@ class App extends Component {
           <Switch>
             <Route exact path="/" component={ConnectPage} />
             <Route exact path="/login" component={ConnectPage} />
-            <Route exact path="/home" component={HomePage} />
+            <Route exact path="/home/:emailId" component={HomePage} />
             <Route exact path="/404" component={NotFoundPage} />
             <Route exact path="/signup/:id" component={SignUpPage} />
             <Route exact path="/connect" component={ConnectPage} />
