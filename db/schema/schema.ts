@@ -19,9 +19,10 @@ async function getRefreshToken(code: any) {
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       code,
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-      redirect_uri: config.redirectUri,
+      client_id:
+        "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
+      client_secret: "vpM3s6IXDLcmZtNpkOFbeQMg",
+      redirect_uri: "http://localhost:3000",
       grant_type: "authorization_code",
     });
     // console.log("refresh");
@@ -160,14 +161,15 @@ const Mutation = new GraphQLObjectType({
       async resolve(parent, { Fname, Lname, email, auth_code }) {
         console.log("Variables are: ", { Fname, Lname, email, auth_code });
         const hostExists = await checkHostsExists(email);
-        const refresh: any = await getRefreshToken(auth_code).then(() => {
+        getRefreshToken(auth_code).then((result) => {
           if (!hostExists) {
             const host = new Host({
               Fname: Fname,
               Lname: Lname,
               email: email,
-              refresh_token: refresh,
+              refresh_token: result,
             });
+            console.log("added to data base");
             return host.save(); //save to the database and return results
           }
         });
