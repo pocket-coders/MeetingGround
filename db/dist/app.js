@@ -19,9 +19,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var express = require("express");
 var mongoose = __importStar(require("mongoose"));
 var schema = __importStar(require("./schema/schema"));
+var express = require("express");
 var graphqlHTTP = require("express-graphql").graphqlHTTP;
 var app = express();
 var cors = require("cors");

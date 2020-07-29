@@ -1,6 +1,7 @@
-import express = require("express");
 import * as mongoose from "mongoose";
 import * as schema from "./schema/schema";
+import express = require("express");
+
 const { graphqlHTTP } = require("express-graphql");
 const app: any = express();
 const cors = require("cors");
