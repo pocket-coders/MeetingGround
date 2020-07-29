@@ -5,6 +5,7 @@ const Link = require("../models/link");
 const Host = require("../models/host");
 const config = require("./apiGoogleconfig.json");
 const axios = require("axios");
+const moment = require("moment");
 
 const {
   GraphQLObjectType,
@@ -75,8 +76,8 @@ const HostType = new GraphQLObjectType({
 const SlotType = new GraphQLObjectType({
   name: "Slot",
   fields: () => ({
-    start_time: { type: GraphQLString },
-    end_time: { type: GraphQLString },
+    start: { type: GraphQLString },
+    end: { type: GraphQLString },
   }),
 });
 
@@ -89,8 +90,8 @@ const SlotType = new GraphQLObjectType({
 // });
 
 type SlotTypeEvent = {
-  start_time: string;
-  end_time: string;
+  start: string;
+  end: string;
 };
 
 // Queries
@@ -117,22 +118,29 @@ const RootQuery = new GraphQLObjectType({
       args: { url: { type: GraphQLString } },
       async resolve(parent, args) {
         const link = Link.findOne(args); //use url link to get Link object
-        const host = Host.findOne({ id: link.hostId }); //use Link object to get Host object
-        const { refresh_token } = host; //use host object to get host refresh token
-        const slots: typeof SlotType[] = await slotQuery(refresh_token); //use refresh token to get list of excluded events
-        // const resultSlots = new GraphQLList(SlotType);
-        // let results ={}
+        const link_object = await Link.findOne(args).select("hostId").exec();
+        const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
+        //const refresh_token = Host.find({host.refresh_token}); //use host object to get host refresh token
+
+        const refresh_token_object = await Host.findOne({
+          _id: link_object.hostId,
+        })
+          .select("refresh_token")
+          .exec();
+
+        //console.log(refresh_token_object.refresh_token);
+
+        const slots = await slotQuery(refresh_token_object.refresh_token); //use refresh token to get list of excluded events
+
         let tempResults: SlotTypeEvent[] = [];
         slots.map((item: any) => {
           let tempObject: SlotTypeEvent = {
-            start_time: item.start,
-            end_time: item.end,
+            start: item.start,
+            end: item.end,
           };
           tempResults.push(tempObject);
         });
         return tempResults;
-
-        //return slots; //return list of excluded events!!!
       },
     },
     host: {
@@ -163,6 +171,12 @@ const RootQuery = new GraphQLObjectType({
         return Host.find({});
       },
     },
+    // refresh_token: {
+    //   type: GraphQLString,
+    //   resolve(parent, args) {
+    //     return
+    //   }
+    // }
   },
 });
 

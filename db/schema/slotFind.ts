@@ -31,6 +31,7 @@ google.options({
 });
 
 async function getAccessToken(refresh_token: any) {
+  console.log(refresh_token);
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       refresh_token,
@@ -42,6 +43,7 @@ async function getAccessToken(refresh_token: any) {
     return Promise.resolve(response.data.access_token);
   } catch (error) {
     console.error(
+      "this the error: ",
       error.response.status,
       error.response.statusText,
       error.response.data
@@ -55,7 +57,7 @@ type SlotTypeEvent = {
 };
 
 const calendar = google.calendar("v3");
-async function getList() {
+async function getList(): Promise<any[]> {
   try {
     const response = await calendar.events.list({
       calendarId: "primary",
@@ -99,30 +101,14 @@ function roundEndTimeQuarterHour(time: Date) {
 const formatDate = (date: Date) =>
   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-async function slotQuery(refreshCode: string) {
-  // return Promise.resolve([
-  //   {
-  //     dateKey: "2020-6-20",
-  //     values: [
-  //       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-  //       setHours(setMinutes(new Date(), 30), 18),
-  //     ],
-  //   },
-  //   {
-  //     dateKey: "2020-6-22",
-  //     values: [
-  //       setHours(setMinutes(new Date(), 30), 19),
-  //       setHours(setMinutes(new Date(), 30), 17),
-  //     ],
-  //   },
-  // ]);
-
+async function slotQuery(refreshCode: string): Promise<any[]> {
   type DictionaryItem = {
     dateKey: string;
     values: Date[];
   };
 
-  getAccessToken(refreshCode)
+  let result: SlotTypeEvent[] = [];
+  return getAccessToken(refreshCode)
     .then((res) => {
       oauth2Client.setCredentials({
         access_token: res,
@@ -131,64 +117,89 @@ async function slotQuery(refreshCode: string) {
       console.log("used this token: " + res);
     })
     .then(() => {
-      getList().then((res: any) => {
+      return getList().then((res: any) => {
         console.log("CREATE ARRAY");
         const events: any[] = res;
         // console.log(res);
-        const rv = events.map((event: any) => ({
-          start: moment.utc(event.start.dateTime).toDate(),
-          end: moment.utc(event.end.dateTime).toDate(),
-        }));
-        rv.map((item: any) => {
+        events.map((event: any) =>
+          result.push({
+            start: moment.utc(event.start.dateTime).toDate().toString(),
+            end: moment.utc(event.end.dateTime).toDate().toString(),
+          })
+        );
+        result.map((item: any) => {
           console.log(item);
         });
-        let resultArray: DictionaryItem[] = [];
-        try {
-          rv.map((item: any) => {
-            let myDateKey: string = formatDate(item.start);
-            item.start = roundStartTimeQuarterHour(item.start);
-            item.end = roundStartTimeQuarterHour(item.end);
-
-            let currTimeToBeAdded = item.start;
-
-            let foundDate = resultArray?.find(
-              (item) => item.dateKey === myDateKey
-            );
-            if (foundDate) {
-              while (currTimeToBeAdded < item.end) {
-                foundDate.values.push(currTimeToBeAdded);
-                currTimeToBeAdded.setTime(
-                  currTimeToBeAdded.getTime() + 15 * 1000 * 60
-                );
-              }
-            } else {
-              let tempObject: DictionaryItem = {
-                dateKey: myDateKey,
-                values: [],
-              };
-              while (currTimeToBeAdded < item.end) {
-                tempObject.values.push(currTimeToBeAdded);
-                currTimeToBeAdded.setTime(
-                  currTimeToBeAdded.getTime() + 15 * 1000 * 60
-                );
-              }
-              resultArray.push(tempObject);
-            }
-            console.log(resultArray);
-            return Promise.resolve(resultArray);
-          });
-        } catch (err) {
-          console.log("an error in the mapping of result array dictionary");
-          console.log(err);
-          return Promise.resolve(<DictionaryItem[]>[]);
-        }
+        return result;
       });
-      // console.log(res);
+    })
+    .catch((err) => {
+      console.log("error here: " + err);
+      return [{ start: "hehehe", end: "welp" }];
     });
 }
 
-slotQuery(
-  "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
-);
+// slotQuery(
+// "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
+// );
 
 export default slotQuery;
+
+// return Promise.resolve([
+//   {
+//     dateKey: "2020-6-20",
+//     values: [
+//       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+//       setHours(setMinutes(new Date(), 30), 18),
+//     ],
+//   },
+//   {
+//     dateKey: "2020-6-22",
+//     values: [
+//       setHours(setMinutes(new Date(), 30), 19),
+//       setHours(setMinutes(new Date(), 30), 17),
+//     ],
+//   },
+// ]);
+
+//TODO: put this on client
+// let resultArray: DictionaryItem[] = [];
+// try {
+//   rv.map((item: any) => {
+//     let myDateKey: string = formatDate(item.start);
+//     item.start = roundStartTimeQuarterHour(item.start);
+//     item.end = roundStartTimeQuarterHour(item.end);
+
+//     let currTimeToBeAdded = item.start;
+
+//     let foundDate = resultArray?.find(
+//       (item) => item.dateKey === myDateKey
+//     );
+//     if (foundDate) {
+//       while (currTimeToBeAdded < item.end) {
+//         foundDate.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//     } else {
+//       let tempObject: DictionaryItem = {
+//         dateKey: myDateKey,
+//         values: [],
+//       };
+//       while (currTimeToBeAdded < item.end) {
+//         tempObject.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//       resultArray.push(tempObject);
+//     }
+//     console.log(resultArray);
+//     return Promise.resolve(resultArray);
+//   });
+// } catch (err) {
+//   console.log("an error in the mapping of result array dictionary");
+//   console.log(err);
+//   return Promise.resolve(<DictionaryItem[]>[]);
+// }
