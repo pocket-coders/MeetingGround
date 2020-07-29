@@ -119,16 +119,18 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const link = Link.findOne(args); //use url link to get Link object
         const link_object = await Link.findOne(args).select("hostId").exec();
-        const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
+        const host = Host.findOne({ _id: link_object.hostId }); //use Link object to get Host object
         //const refresh_token = Host.find({host.refresh_token}); //use host object to get host refresh token
 
         const refresh_token_object = await Host.findOne({
+          //use Link object to get Host object and //use host object to get host refresh token
           _id: link_object.hostId,
         })
           .select("refresh_token")
           .exec();
 
-        //console.log(refresh_token_object.refresh_token);
+        console.log("HEHRHERHEHREHR");
+        console.log(refresh_token_object.refresh_token);
 
         const slots = await slotQuery(refresh_token_object.refresh_token); //use refresh token to get list of excluded events
 

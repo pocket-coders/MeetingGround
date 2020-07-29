@@ -147,12 +147,15 @@ var RootQuery = new GraphQLObjectType({
                                 link_object = _a.sent();
                                 host = Host.findOne({ _id: link_object.hostId });
                                 return [4 /*yield*/, Host.findOne({
+                                        //use Link object to get Host object and //use host object to get host refresh token
                                         _id: link_object.hostId
                                     })
                                         .select("refresh_token")
                                         .exec()];
                             case 2:
                                 refresh_token_object = _a.sent();
+                                console.log("HEHRHERHEHREHR");
+                                console.log(refresh_token_object.refresh_token);
                                 return [4 /*yield*/, slotFind_1["default"](refresh_token_object.refresh_token)];
                             case 3:
                                 slots = _a.sent();

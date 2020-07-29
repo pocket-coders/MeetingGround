@@ -18,8 +18,7 @@
     "googleapis": "^56.0.0",
     "graphql": "^15.3.0",
     "lodash": "^4.17.19",
-    "mongoose": "^5.9.25",
-    "ts-node": "^8.10.2"
+    "mongoose": "^5.9.25"
   },
   "scripts": {
     "start": "nodemon app"

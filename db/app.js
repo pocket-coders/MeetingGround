@@ -20,9 +20,6 @@ app.use("/graphql", graphqlHTTP({
     schema: schema,
     graphiql: true
 }));
-app.listen(4001, function () {
-    console.log("🧩 Listening for requests on port 4001");
+app.listen(4000, function () {
+    console.log("🧩 Listening for requests on port 4000");
 });
-// app.listen(4000, () => {
-//   console.log("🧩 Listening for requests on port 4000");
-// });

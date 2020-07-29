@@ -1,7 +1,6 @@
+import express = require("express");
 import * as mongoose from "mongoose";
 import * as schema from "./schema/schema";
-import express = require("express");
-
 const { graphqlHTTP } = require("express-graphql");
 const app: any = express();
 const cors = require("cors");
@@ -29,9 +28,6 @@ app.use(
   })
 );
 
-app.listen(4001, () => {
-  console.log("🧩 Listening for requests on port 4001");
+app.listen(4000, () => {
+  console.log("🧩 Listening for requests on port 4000");
 });
-// app.listen(4000, () => {
-//   console.log("🧩 Listening for requests on port 4000");
-// });
