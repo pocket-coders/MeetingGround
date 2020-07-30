@@ -36,9 +36,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-// import setSeconds from "date-fns/setSeconds";
-// import setMinutes from "date-fns/setMinutes";
-// import setHours from "date-fns/setHours";
 var config = require("./apiGoogleconfig.json");
 var moment = require("moment");
 var axios = require("axios");
@@ -65,10 +62,7 @@ function getAccessToken(refresh_token) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log(refresh_token);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
+                    _a.trys.push([0, 2, , 3]);
                     return [4 /*yield*/, axios.post("https://oauth2.googleapis.com/token", {
                             refresh_token: refresh_token,
                             client_id: clientId,
@@ -76,54 +70,23 @@ function getAccessToken(refresh_token) {
                             redirect_uri: redirectUri,
                             grant_type: "refresh_token"
                         })];
-                case 2:
-                    response = _a.sent();
-                    return [2 /*return*/, Promise.resolve(response.data.access_token)];
-                case 3:
-                    error_1 = _a.sent();
-                    console.error("this the error: ", error_1.response.status, error_1.response.statusText, error_1.response.data);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-var calendar = google.calendar("v3");
-function getList() {
-    return __awaiter(this, void 0, void 0, function () {
-        var response, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, calendar.events.list({
-                            calendarId: "primary",
-                            timeMin: new Date().toISOString(),
-                            showDeleted: false,
-                            singleEvents: true,
-                            maxResults: 10,
-                            orderBy: "startTime",
-                            auth: oauth2Client
-                        })];
                 case 1:
                     response = _a.sent();
-                    return [2 /*return*/, Promise.resolve(response.data.items)];
+                    return [2 /*return*/, Promise.resolve(response.data.access_token)];
                 case 2:
-                    err_1 = _a.sent();
-                    console.log("an error in the list");
-                    console.log(err_1);
-                    return [2 /*return*/, Promise.resolve([])];
+                    error_1 = _a.sent();
+                    console.error(error_1.response.status, error_1.response.statusText, error_1.response.data);
+                    return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];
             }
         });
     });
 }
-function slotQuery(refreshCode) {
+var calendar = google.calendar("v3");
+function invite(refreshToken, duration, email, userName, comment, startTime, hostFirst, hostLast) {
     return __awaiter(this, void 0, void 0, function () {
-        var result;
         return __generator(this, function (_a) {
-            result = [];
-            return [2 /*return*/, getAccessToken(refreshCode)
+            return [2 /*return*/, getAccessToken(refreshToken)
                     .then(function (res) {
                     oauth2Client.setCredentials({
                         access_token: res,
@@ -132,29 +95,99 @@ function slotQuery(refreshCode) {
                     console.log("used this token: " + res);
                 })
                     .then(function () {
-                    return getList().then(function (res) {
-                        console.log("CREATE ARRAY");
-                        var events = res;
-                        // console.log(res);
-                        events.map(function (event) {
-                            return result.push({
-                                start: moment.utc(event.start.dateTime).toDate().toString(),
-                                end: moment.utc(event.end.dateTime).toDate().toString()
-                            });
-                        });
-                        result.map(function (item) {
-                            console.log(item);
-                        });
-                        return result;
+                    return sendInvite(duration, email, userName, comment, new Date(startTime), hostFirst, hostLast).then(function (res) {
+                        if (res) {
+                            return Promise.resolve(true);
+                        }
+                        else {
+                            return Promise.resolve(false);
+                        }
                     });
                 })["catch"](function (err) {
-                    console.log("error here: " + err);
-                    return [{ start: "hehehe", end: "welp" }];
+                    console.log("error occurred: " + err);
+                    return Promise.resolve(false);
                 })];
         });
     });
 }
-// slotQuery(
-// "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
-// );
-exports["default"] = slotQuery;
+function ISODateString(d) {
+    function pad(n) {
+        return n < 10 ? "0" + n : n;
+    }
+    return (d.getFullYear() +
+        "-" +
+        pad(d.getMonth() + 1) +
+        "-" +
+        pad(d.getDate()) +
+        "T" +
+        pad(d.getHours()) +
+        ":" +
+        pad(d.getMinutes()) +
+        ":" +
+        pad(d.getSeconds()) +
+        "-" +
+        pad(d.getTimezoneOffset() / 60) +
+        ":00");
+}
+function sendInvite(duration, email, userName, comment, startTime, hostFirst, hostLast) {
+    return __awaiter(this, void 0, void 0, function () {
+        var start, timeZone, event, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    start = startTime.toString();
+                    timeZone = startTime.getTimezoneOffset().toString();
+                    console.log(start);
+                    console.log(timeZone);
+                    event = {
+                        summary: "Meeting: " + userName + " & " + hostFirst + " " + hostLast,
+                        location: "Online",
+                        description: comment,
+                        start: {
+                            // date: scheduledDate.toISOString(),
+                            dateTime: ISODateString(startTime),
+                            timeZone: "Etc/UTC"
+                        },
+                        end: {
+                            // date: scheduledDate.toISOString(),
+                            dateTime: ISODateString(new Date(startTime.getTime() + 60 * 1000 * duration)),
+                            timeZone: "Etc/UTC"
+                        },
+                        recurrence: ["RRULE:FREQ=DAILY;COUNT=1"],
+                        attendees: [{ email: email }],
+                        visibility: "default",
+                        reminders: {
+                            useDefault: false,
+                            overrides: [
+                                { method: "email", minutes: 24 * 60 },
+                                { method: "popup", minutes: 10 },
+                            ]
+                        }
+                    };
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, calendar.events.insert({
+                            calendarId: "primary",
+                            resource: event,
+                            sendNotifications: true,
+                            sendUpdates: "all"
+                        })];
+                case 2:
+                    _a.sent();
+                    // .execute((event: any) => {
+                    //   console.log("Event created: " + event.status);
+                    //   // result = event.status.toLocaleString() === "complete";
+                    // });
+                    return [2 /*return*/, Promise.resolve(true)];
+                case 3:
+                    err_1 = _a.sent();
+                    console.log("an error in the list");
+                    console.log(err_1);
+                    return [2 /*return*/, Promise.resolve(false)];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports["default"] = invite;

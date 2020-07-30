@@ -76,31 +76,6 @@ async function getList(): Promise<any[]> {
   }
 }
 
-function roundStartTimeQuarterHour(time: Date) {
-  const timeToReturn = time;
-
-  timeToReturn.setMilliseconds(
-    Math.floor(timeToReturn.getMilliseconds() / 1000) * 1000
-  );
-  timeToReturn.setSeconds(Math.floor(timeToReturn.getSeconds() / 60) * 60);
-  timeToReturn.setMinutes(Math.floor(timeToReturn.getMinutes() / 15) * 15);
-  return timeToReturn;
-}
-
-function roundEndTimeQuarterHour(time: Date) {
-  const timeToReturn = time;
-
-  timeToReturn.setMilliseconds(
-    Math.ceil(timeToReturn.getMilliseconds() / 1000) * 1000
-  );
-  timeToReturn.setSeconds(Math.ceil(timeToReturn.getSeconds() / 60) * 60);
-  timeToReturn.setMinutes(Math.ceil(timeToReturn.getMinutes() / 15) * 15);
-  return timeToReturn;
-}
-
-const formatDate = (date: Date) =>
-  `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-
 async function slotQuery(refreshCode: string): Promise<any[]> {
   type DictionaryItem = {
     dateKey: string;
@@ -144,62 +119,3 @@ async function slotQuery(refreshCode: string): Promise<any[]> {
 // );
 
 export default slotQuery;
-
-// return Promise.resolve([
-//   {
-//     dateKey: "2020-6-20",
-//     values: [
-//       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-//       setHours(setMinutes(new Date(), 30), 18),
-//     ],
-//   },
-//   {
-//     dateKey: "2020-6-22",
-//     values: [
-//       setHours(setMinutes(new Date(), 30), 19),
-//       setHours(setMinutes(new Date(), 30), 17),
-//     ],
-//   },
-// ]);
-
-//TODO: put this on client
-// let resultArray: DictionaryItem[] = [];
-// try {
-//   rv.map((item: any) => {
-//     let myDateKey: string = formatDate(item.start);
-//     item.start = roundStartTimeQuarterHour(item.start);
-//     item.end = roundStartTimeQuarterHour(item.end);
-
-//     let currTimeToBeAdded = item.start;
-
-//     let foundDate = resultArray?.find(
-//       (item) => item.dateKey === myDateKey
-//     );
-//     if (foundDate) {
-//       while (currTimeToBeAdded < item.end) {
-//         foundDate.values.push(currTimeToBeAdded);
-//         currTimeToBeAdded.setTime(
-//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
-//         );
-//       }
-//     } else {
-//       let tempObject: DictionaryItem = {
-//         dateKey: myDateKey,
-//         values: [],
-//       };
-//       while (currTimeToBeAdded < item.end) {
-//         tempObject.values.push(currTimeToBeAdded);
-//         currTimeToBeAdded.setTime(
-//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
-//         );
-//       }
-//       resultArray.push(tempObject);
-//     }
-//     console.log(resultArray);
-//     return Promise.resolve(resultArray);
-//   });
-// } catch (err) {
-//   console.log("an error in the mapping of result array dictionary");
-//   console.log(err);
-//   return Promise.resolve(<DictionaryItem[]>[]);
-// }

@@ -38,12 +38,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var graphql = require("graphql");
 var slotFind_1 = require("./slotFind");
+var invite_1 = require("./invite");
 var _ = require("lodash");
 var Link = require("../models/link");
 var Host = require("../models/host");
 var config = require("./apiGoogleconfig.json");
 var axios = require("axios");
-var GraphQLObjectType = graphql.GraphQLObjectType, GraphQLString = graphql.GraphQLString, GraphQLID = graphql.GraphQLID, GraphQLInt = graphql.GraphQLInt, GraphQLList = graphql.GraphQLList, GraphQLNonNull = graphql.GraphQLNonNull;
+var moment = require("moment");
+var GraphQLObjectType = graphql.GraphQLObjectType, GraphQLString = graphql.GraphQLString, GraphQLID = graphql.GraphQLID, GraphQLInt = graphql.GraphQLInt, GraphQLList = graphql.GraphQLList, GraphQLNonNull = graphql.GraphQLNonNull, GraphQLBoolean = graphql.GraphQLBoolean;
 function getRefreshToken(code) {
     return __awaiter(this, void 0, void 0, function () {
         var response, error_1;
@@ -53,9 +55,9 @@ function getRefreshToken(code) {
                     _a.trys.push([0, 2, , 3]);
                     return [4 /*yield*/, axios.post("https://oauth2.googleapis.com/token", {
                             code: code,
-                            client_id: config.clientId,
-                            client_secret: config.clientSecret,
-                            redirect_uri: config.redirectUri,
+                            client_id: "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
+                            client_secret: "vpM3s6IXDLcmZtNpkOFbeQMg",
+                            redirect_uri: "http://localhost:3000",
                             grant_type: "authorization_code"
                         })];
                 case 1:
@@ -105,11 +107,19 @@ var HostType = new GraphQLObjectType({
         }
     }); }
 });
+var EventCreateType = new GraphQLObjectType({
+    name: "state",
+    fields: function () { return ({
+        state: {
+            type: GraphQLBoolean
+        }
+    }); }
+});
 var SlotType = new GraphQLObjectType({
     name: "Slot",
     fields: function () { return ({
-        start_time: { type: GraphQLString },
-        end_time: { type: GraphQLString }
+        start: { type: GraphQLString },
+        end: { type: GraphQLString }
     }); }
 });
 // Queries
@@ -130,27 +140,105 @@ var RootQuery = new GraphQLObjectType({
                 return Link.findOne(args);
             }
         },
+        //List[[start, end], [start, end], [start, end], [start, end]]
         list_available_slots: {
             type: new GraphQLList(SlotType),
             args: { url: { type: GraphQLString } },
             resolve: function (parent, args) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var link, host, auth_code, slots;
+                    var link, link_object, host, refresh_token_object, slots, tempResults;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
                                 link = Link.findOne(args);
-                                host = Host.findOne({ id: link.hostId });
-                                auth_code = host.auth_code;
-                                return [4 /*yield*/, slotFind_1["default"](auth_code)];
+                                return [4 /*yield*/, Link.findOne(args).select("hostId").exec()];
                             case 1:
+                                link_object = _a.sent();
+                                host = Host.findOne({ _id: link_object.hostId });
+                                return [4 /*yield*/, Host.findOne({
+                                        _id: link_object.hostId
+                                    })
+                                        .select("refresh_token")
+                                        .exec()];
+                            case 2:
+                                refresh_token_object = _a.sent();
+                                return [4 /*yield*/, slotFind_1["default"](refresh_token_object.refresh_token)];
+                            case 3:
                                 slots = _a.sent();
-                                return [2 /*return*/, slots];
+                                tempResults = [];
+                                slots.map(function (item) {
+                                    var tempObject = {
+                                        start: item.start,
+                                        end: item.end
+                                    };
+                                    tempResults.push(tempObject);
+                                });
+                                return [2 /*return*/, tempResults];
                         }
                     });
                 });
             }
         },
+        // create_event: {
+        //   type: EventCreateType,
+        //   args: {
+        //     url: { type: new GraphQLNonNull(GraphQLString) },
+        //     email: { type: new GraphQLNonNull(GraphQLString) },
+        //     username: { type: new GraphQLNonNull(GraphQLString) },
+        //     comment: { type: new GraphQLNonNull(GraphQLString) },
+        //     startTime: { type: new GraphQLNonNull(GraphQLString) },
+        //   },
+        //   async resolve(
+        //     parent,
+        //     // args
+        //     { url, duration, email, username, comment, startTime }
+        //   ) {
+        //     console.log("the variable are: ", {
+        //       url,
+        //       duration,
+        //       email,
+        //       username,
+        //       comment,
+        //       startTime,
+        //     });
+        //     // const link = Link.findById(url); //use url link to get Link object
+        //     const link_object = await Link.findOne({ url }).select("hostId").exec();
+        //     // const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
+        //     const link_object_duration = await Link.findOne({ url })
+        //       .select("duration")
+        //       .exec();
+        //     const refresh_token_object = await Host.findOne({
+        //       _id: link_object.hostId,
+        //     })
+        //       .select("refresh_token")
+        //       .exec();
+        //     const host_first = await Host.findOne({
+        //       _id: link_object.hostId,
+        //     })
+        //       .select("Fname")
+        //       .exec();
+        //     const host_last = await Host.findOne({
+        //       _id: link_object.hostId,
+        //     })
+        //       .select("Lname")
+        //       .exec();
+        //     const slots = await invite(
+        //       refresh_token_object.refresh_token,
+        //       link_object_duration.duration,
+        //       email,
+        //       username,
+        //       comment,
+        //       startTime,
+        //       host_first.Fname,
+        //       host_last.Lname
+        //     ); //use refresh token to get list of excluded events
+        //     console.log(slots);
+        //     let tempEvent: eventCreateAction = {
+        //       state: slots,
+        //     };
+        //     return tempEvent;
+        //   },
+        // },
         host: {
             type: HostType,
             args: { id: { type: GraphQLID } },
@@ -196,6 +284,21 @@ function checkHostsExists(email) {
         });
     });
 }
+function checkLinkExists(url) {
+    return __awaiter(this, void 0, void 0, function () {
+        var h, hv;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    h = Link.findOne({ url: url });
+                    return [4 /*yield*/, h];
+                case 1:
+                    hv = !!(_a.sent());
+                    return [2 /*return*/, hv];
+            }
+        });
+    });
+}
 // Mutations
 var Mutation = new GraphQLObjectType({
     name: "Mutation",
@@ -211,7 +314,7 @@ var Mutation = new GraphQLObjectType({
             resolve: function (parent, _a) {
                 var Fname = _a.Fname, Lname = _a.Lname, email = _a.email, auth_code = _a.auth_code;
                 return __awaiter(this, void 0, void 0, function () {
-                    var hostExists, refresh;
+                    var hostExists;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -219,19 +322,18 @@ var Mutation = new GraphQLObjectType({
                                 return [4 /*yield*/, checkHostsExists(email)];
                             case 1:
                                 hostExists = _b.sent();
-                                return [4 /*yield*/, getRefreshToken(auth_code).then(function () {
-                                        if (!hostExists) {
-                                            var host = new Host({
-                                                Fname: Fname,
-                                                Lname: Lname,
-                                                email: email,
-                                                refresh_token: refresh
-                                            });
-                                            return host.save(); //save to the database and return results
-                                        }
-                                    })];
-                            case 2:
-                                refresh = _b.sent();
+                                getRefreshToken(auth_code).then(function (result) {
+                                    if (!hostExists) {
+                                        var host = new Host({
+                                            Fname: Fname,
+                                            Lname: Lname,
+                                            email: email,
+                                            refresh_token: result
+                                        });
+                                        console.log("added to data base");
+                                        return host.save(); //save to the database and return results
+                                    }
+                                });
                                 // if (!hostExists) {
                                 //   const host = new Host({
                                 //     Fname: Fname,
@@ -254,13 +356,97 @@ var Mutation = new GraphQLObjectType({
                 duration: { type: new GraphQLNonNull(GraphQLInt) },
                 hostId: { type: new GraphQLNonNull(GraphQLID) }
             },
-            resolve: function (parent, args) {
-                var link = new Link({
-                    url: args.url,
-                    duration: args.duration,
-                    hostId: args.hostId
+            resolve: function (parent, _a) {
+                var url = _a.url, duration = _a.duration, hostId = _a.hostId;
+                return __awaiter(this, void 0, void 0, function () {
+                    var linkExists, link;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                console.log("Variables are: ", { url: url, duration: duration, hostId: hostId });
+                                return [4 /*yield*/, checkLinkExists(url)];
+                            case 1:
+                                linkExists = _b.sent();
+                                if (!linkExists) {
+                                    link = new Link({
+                                        url: url,
+                                        duration: duration,
+                                        hostId: hostId
+                                    });
+                                    console.log("link added to data base");
+                                    return [2 /*return*/, link.save()]; //save to the database and return results
+                                }
+                                return [2 /*return*/, null];
+                        }
+                    });
                 });
-                return link.save(); //save to the database and return results
+            }
+        },
+        create_event: {
+            type: EventCreateType,
+            args: {
+                url: { type: new GraphQLNonNull(GraphQLString) },
+                email: { type: new GraphQLNonNull(GraphQLString) },
+                username: { type: new GraphQLNonNull(GraphQLString) },
+                comment: { type: new GraphQLNonNull(GraphQLString) },
+                startTime: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve: function (parent, 
+            // args
+            _a) {
+                var url = _a.url, duration = _a.duration, email = _a.email, username = _a.username, comment = _a.comment, startTime = _a.startTime;
+                return __awaiter(this, void 0, void 0, function () {
+                    var link_object, link_object_duration, refresh_token_object, host_first, host_last, slots, tempEvent;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                console.log("the variable are: ", {
+                                    url: url,
+                                    email: email,
+                                    username: username,
+                                    comment: comment,
+                                    startTime: startTime
+                                });
+                                return [4 /*yield*/, Link.findOne({ url: url }).select("hostId").exec()];
+                            case 1:
+                                link_object = _b.sent();
+                                return [4 /*yield*/, Link.findOne({ url: url })
+                                        .select("duration")
+                                        .exec()];
+                            case 2:
+                                link_object_duration = _b.sent();
+                                return [4 /*yield*/, Host.findOne({
+                                        _id: link_object.hostId
+                                    })
+                                        .select("refresh_token")
+                                        .exec()];
+                            case 3:
+                                refresh_token_object = _b.sent();
+                                return [4 /*yield*/, Host.findOne({
+                                        _id: link_object.hostId
+                                    })
+                                        .select("Fname")
+                                        .exec()];
+                            case 4:
+                                host_first = _b.sent();
+                                return [4 /*yield*/, Host.findOne({
+                                        _id: link_object.hostId
+                                    })
+                                        .select("Lname")
+                                        .exec()];
+                            case 5:
+                                host_last = _b.sent();
+                                return [4 /*yield*/, invite_1["default"](refresh_token_object.refresh_token, link_object_duration.duration, email, username, comment, startTime, host_first.Fname, host_last.Lname)];
+                            case 6:
+                                slots = _b.sent();
+                                console.log(slots);
+                                tempEvent = {
+                                    state: slots
+                                };
+                                return [2 /*return*/, tempEvent];
+                        }
+                    });
+                });
             }
         }
     }

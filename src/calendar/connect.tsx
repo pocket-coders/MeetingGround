@@ -362,7 +362,7 @@ const ConnectPage = () => {
 
   useEffect(() => {
     // check if email is already in the data base and allow made uo email
-    setExtention("/home/" + email.split("@")[0]);
+    setExtention("/home/" + email); //.split("@")[0]);
   }, [email]);
 
   return (
