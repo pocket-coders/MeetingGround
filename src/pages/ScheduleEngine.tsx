@@ -107,7 +107,8 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
     text-align: center;
     background: rgba(225, 235, 237);
     height: 300px;
-    width: 200px;
+    width: 220px;
+    border: 2px solid black;
   `;
 
   return (

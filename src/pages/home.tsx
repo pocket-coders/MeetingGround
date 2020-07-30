@@ -162,6 +162,13 @@ const HomePage: React.FC<HomePropsInterface> = (props: HomePropsInterface) => {
                 Generate one-time signup links for your guests to schedule a
                 meeting
               </h2>
+              <h3
+                style={{
+                  margin: 25,
+                }}
+              >
+                After clicking generate, copy and send the link to your guest.
+              </h3>
               <HomeDiv>
                 <ScheduleEngine timeLength={15} emailID={emailId} />
                 <ScheduleEngine timeLength={30} emailID={emailId} />
