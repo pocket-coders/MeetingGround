@@ -225,7 +225,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             setSelect(true);
           }}
           timeFormat="HH:mm"
-          timeIntervals={showSlotInfo.data.link.duration}
+          timeIntervals={showSlotInfo.data.link_url.duration}
           inline
         />
         {selectTime && (
@@ -235,7 +235,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             selected={startTime}
             onChange={(date: Date) => setStartTime(date)}
             timeFormat="HH:mm"
-            timeIntervals={showSlotInfo.data.link.duration}
+            timeIntervals={showSlotInfo.data.link_url.duration}
             excludeTimes={excludeTimeList}
             inline
           />
@@ -276,6 +276,8 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { url: urlId.urlid },
     });
+    console.log("finished query");
+    console.log(data);
 
     return loading ? (
       <div>loading</div>
@@ -313,7 +315,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
           <MainBodyFormat>
             <h1 style={{ top: 10, margin: 20 }}>
-              Sign up for your {data.link.duration} minute meeting.
+              Sign up for your {data.link_url.duration} minute meeting.
             </h1>
             <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
             <div className="form-group">
@@ -336,38 +338,18 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     );
   }
 
-  //interval = IntervalSetup() > 0 ? IntervalSetup() : 45;
-
   return (
-    <ApolloProvider client={client}>
-      <IntervalSetup />
-    </ApolloProvider>
+    // <ApolloProvider client={client}>
+    <IntervalSetup />
+    // </ApolloProvider>
   );
 };
-
-function SignUpServer() {
-  const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
-    variables: { url: urlId.urlid },
-  });
-  return loading ? (
-    <div>loading</div>
-  ) : error ? (
-    <div>An Error occurred: {error}</div>
-  ) : (
-    <ul>
-      <li>
-        {data.link.link} used by {data.link.email} for {data.link.duration}
-      </li>
-    </ul>
-  );
-}
 
 const GET_UNIQUE_LINK = gql`
   query($url: String) {
     link_url(url: $url) {
       url
       duration
-      host
     }
   }
 `;
