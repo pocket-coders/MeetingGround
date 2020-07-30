@@ -6,6 +6,12 @@ import { gql } from "apollo-boost";
 import { Link } from "react-router-dom";
 //npm install --save @emotion/core
 import { useQuery } from "@apollo/react-hooks";
+import { FaRegCopy } from "react-icons/fa";
+import Snackbar from "@material-ui/core/Snackbar";
+import MuiAlert, { AlertProps } from "@material-ui/lab/Alert";
+import { makeStyles, Theme } from "@material-ui/core/styles";
+// yarn add @material-ui/lab
+// yarn add @material-ui/core
 
 const appendLinktoDB = gql`
   mutation addLink($url: String!, $duration: Int!, $hostId: ID!) {
@@ -23,10 +29,25 @@ const getHostId = gql`
   }
 `;
 
+function Alert(props: AlertProps) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    width: "100%",
+    "& > * + *": {
+      marginTop: theme.spacing(2),
+    },
+  },
+}));
+
 const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
   timeLength,
   emailID,
 }) => {
+  const [hasGenerate, setHasGenerate] = useState(false);
+
   const [duration, setDuration] = useState<number>(timeLength);
   const [mutate] = useMutation(appendLinktoDB);
   const [url, setUrl] = useState("");
@@ -63,7 +84,7 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
   }
   const getUrl = async () => {
     const urlIdLastPart = makeid(32);
-    const tempId = "meetingground.com/signup/" + emailID + "/" + urlIdLastPart;
+    const tempId = "meetingground.com/signup/" + urlIdLastPart;
     setUrl(tempId);
     console.log("my url: " + url);
     return Promise.resolve(urlIdLastPart);
@@ -93,12 +114,34 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
           console.log("an error happened on the link" + err);
         });
     });
+    setHasGenerate(true);
   };
 
   const copyLink = (e: any) => {
-    //execCommand("copy")
+    const el = document.createElement("textarea");
+    el.value = url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+    if (hasGenerate) handleClick();
   };
 
+  //
+  const classes = useStyles();
+  const [open, setOpen] = React.useState(false);
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event?: React.SyntheticEvent, reason?: string) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
   const ScheduleEnginePack = styled.div`
     display: flex;
     flex-direction: column;
@@ -107,7 +150,7 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
     text-align: center;
     background: rgba(225, 235, 237);
     height: 300px;
-    width: 220px;
+    width: 250px;
     border: 2px solid black;
   `;
 
@@ -122,25 +165,32 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
           flexDirection: "column",
         }}
       >
-        <input id="random_url" value={url} />
         <div style={{ flexDirection: "column" }}>
+          <input id="random_url" value={url} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <button
             onClick={(e) => handleGenerate(e)}
             type="button"
             className="btn btn-secondary"
-            style={{ padding: 2, margin: 15 }}
+            style={{ padding: 2, margin: 15, verticalAlign: "middle" }}
           >
             Generate Link
           </button>
-          <button
-            onClick={(e) => copyLink(e)}
-            type="button"
-            className="btn btn-secondary"
-            style={{ padding: 2, margin: 15 }}
-          >
-            copy
-          </button>
         </div>
+        <button
+          onClick={(e) => copyLink(e)}
+          type="button"
+          className="btn btn-secondary"
+          style={{ padding: 2, margin: 0, verticalAlign: "middle" }}
+        >
+          <FaRegCopy />
+        </button>
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity="info">
+            Link Copied to Clipboard!
+          </Alert>
+        </Snackbar>
       </form>
     </ScheduleEnginePack>
   );
