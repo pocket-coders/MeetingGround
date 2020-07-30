@@ -1,5 +1,5 @@
 /*users.jsx*/
-import useForm from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { RouteComponentProps } from "react-router-dom";
 //You have to use the link component to link between you pages
 
@@ -423,7 +423,6 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
             {" "}
             Your scheduled date is {scheduledDate.toString()}
           </h3>
-
           <h4 style={{ margin: 20 }}>
             {" "}
             Please input your information below to confirm your meeting.
@@ -474,6 +473,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
               </button>
             </div>
           </form>
+          d
         </MainBodyFormat>
         {true && (
           <ApolloProvider client={client}>
