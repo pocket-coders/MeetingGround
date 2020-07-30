@@ -1,9 +1,102 @@
 import React, { useState, useEffect } from "react";
+import { useMutation } from "react-apollo";
 import ScheduleCard from "./ScheduleCard/component";
 import styled from "@emotion/styled";
+import { gql } from "apollo-boost";
+import { Link } from "react-router-dom";
 //npm install --save @emotion/core
+import { useQuery } from "@apollo/react-hooks";
 
-const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
+const appendLinktoDB = gql`
+  mutation addLink($url: String!, $duration: Int!, $hostId: ID!) {
+    addLink(url: $url, duration: $duration, hostId: $hostId) {
+      duration
+    }
+  }
+`;
+
+const getHostId = gql`
+  query($email: String) {
+    host_email(email: $email) {
+      id
+    }
+  }
+`;
+
+const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
+  timeLength,
+  emailID,
+}) => {
+  // const [hostID, setHostID] = useState<string>("");
+  const [duration, setDuration] = useState<number>(timeLength);
+  const [mutate] = useMutation(appendLinktoDB);
+  const [url, setUrl] = useState("");
+  const hostID: {
+    id: string;
+  } = {
+    id: "",
+  };
+  const {
+    loading: loadingHostId,
+    error: errorHostId,
+    data: hostIdData,
+  } = useQuery(getHostId, {
+    variables: { email: emailID },
+  });
+
+  loadingHostId
+    ? console.log("loading Email")
+    : errorHostId
+    ? console.log("An Error occurred:" + { errorHostId })
+    : (hostID.id = hostIdData.host_email.id);
+
+  console.log("host id here: " + hostID.id);
+
+  // function checkEmail() {
+  //   if (hostIdData.host_email === null) {
+  //     console.log("it is false");
+
+  //     //props.history.push("/404");
+  //     return (
+  //       <div>
+  //         <Link to="/404"></Link>
+  //       </div>
+  //     );
+  //   } else {
+  //     // console.log("it is true");
+  //     // hostID(temp.host_email.id);
+  //     return true;
+  //   }
+  // }
+
+  // loadingHostId
+  //   ? //<div>loading</div>
+  //     console.log("loading host id")
+  //   : errorHostId
+  //   ? console.log("error host id")
+  //   : hostIdData.host_email !== null && setHostID(hostIdData.host_email.id);
+
+  // useEffect(() => {
+  //   console.log("USE EFFECT RUNNING");
+  //   async function addLinkToDb() {
+  //     const arg = await mutate({
+  //       variables: {
+  //         url: "urlkjhgfvhjkpoiuytrdcvbnklpoiuy",
+  //         duration: 14,
+  //         hostId: "5f207f82e8a5300b4e3211dd",
+  //       },
+  //     });
+  //     console.log(arg);
+  //   }
+  //   addLinkToDb()
+  //     .then(() => {
+  //       console.log(" linkn appended successfully");
+  //     })
+  //     .catch((err) => {
+  //       console.log("an error happened on the link");
+  //     });
+  // }, []); //url, hostID, duration, mutate
+
   //variable schedule is an object that consists of timelength and url.
   //url left blank when not generated
   // const scheduling: {
@@ -13,7 +106,20 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
   //   time: timeLength,
   //   url: "",
   // };
-  const [url, setUrl] = useState("");
+  // const {
+  //   loading: loadingHostId,
+  //   error: errorHostId,
+  //   data: hostIdData,
+  // } = useQuery(getHostId, {
+  //   variables: { email: emailID },
+  // });
+
+  // loadingHostId
+  //   ? //<div>loading</div>
+  //     console.log("loading host id")
+  //   : errorHostId
+  //   ? console.log("error host id")
+  //   : hostIdData.host_email !== null && setHostID(hostIdData.host_email.id);
 
   function makeid(length: number) {
     var result = "";
@@ -26,16 +132,40 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
     return result;
   }
   const getUrl = async () => {
-    const tempId = "meetingground.com/signup/" + makeid(16);
+    const tempId = "meetingground.com/signup/" + emailID + "/" + makeid(16);
     setUrl(tempId);
-    // setUrl({
-    //   url: tempId,
-    // });
+    console.log("my url: " + url);
+    return Promise.resolve(tempId);
   };
+
+  async function addLinkToDb(tempUrl: string) {
+    // auth_code --> Google Offline Access code
+    const arg = await mutate({
+      variables: {
+        url: tempUrl,
+        duration: duration,
+        hostId: hostID.id,
+      },
+    });
+    console.log(arg);
+  }
 
   const handleGenerate = (e: any) => {
     e.preventDefault();
-    getUrl();
+    getUrl().then((res) => {
+      console.log("updated url, adding to db");
+      addLinkToDb(res)
+        .then(() => {
+          console.log(" linkn appended successfully");
+        })
+        .catch((err) => {
+          console.log("an error happened on the link" + err);
+        });
+    });
+  };
+
+  const copyLink = (e: any) => {
+    //execCommand("copy")
   };
 
   const ScheduleEnginePack = styled.div`
@@ -45,22 +175,78 @@ const ScheduleEngine: React.FC<{ timeLength: number }> = ({ timeLength }) => {
     margin: 25px;
     text-align: center;
     background: rgba(225, 235, 237);
-    height: 200px;
-    width: 250px;
+    height: 300px;
+    width: 200px;
   `;
+
+  // return loadingHostId ? (
+  //   <div>loading</div>
+  // ) : errorHostId ? (
+  //   <div>error host id"</div>
+  // ) : (
+  //   <ScheduleEnginePack>
+  //     <ScheduleCard timeLength={timeLength} />
+  //     <form
+  //       style={{
+  //         margin: 15,
+  //         alignContent: "center",
+  //         justifyContent: "center",
+  //         flexDirection: "column",
+  //       }}
+  //     >
+  //       <input id="random_url" value={url} />
+  //       <div style={{ flexDirection: "column" }}>
+  //         <button
+  //           onClick={(e) => handleGenerate(e)}
+  //           type="button"
+  //           className="btn btn-secondary"
+  //           style={{ padding: 2, margin: 15 }}
+  //         >
+  //           Generate Link
+  //         </button>
+  //         <button
+  //           onClick={(e) => copyLink(e)}
+  //           type="button"
+  //           className="btn btn-secondary"
+  //           style={{ padding: 2, margin: 15 }}
+  //         >
+  //           copy
+  //         </button>
+  //       </div>
+  //     </form>
+  //   </ScheduleEnginePack>
+  // );
 
   return (
     <ScheduleEnginePack>
       <ScheduleCard timeLength={timeLength} />
-      <form style={{ margin: 15 }}>
+      <form
+        style={{
+          margin: 15,
+          alignContent: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+        }}
+      >
         <input id="random_url" value={url} />
-        <button
-          onClick={(e) => handleGenerate(e)}
-          type="button"
-          className="btn btn-secondary"
-        >
-          Generate Link
-        </button>
+        <div style={{ flexDirection: "column" }}>
+          <button
+            onClick={(e) => handleGenerate(e)}
+            type="button"
+            className="btn btn-secondary"
+            style={{ padding: 2, margin: 15 }}
+          >
+            Generate Link
+          </button>
+          <button
+            onClick={(e) => copyLink(e)}
+            type="button"
+            className="btn btn-secondary"
+            style={{ padding: 2, margin: 15 }}
+          >
+            copy
+          </button>
+        </div>
       </form>
     </ScheduleEnginePack>
   );
