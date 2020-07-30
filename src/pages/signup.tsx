@@ -218,25 +218,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     return { loading, error, resultArray };
   }
 
-  // const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
-  //   DictionaryItem[]
-  // >([
-  //   {
-  //     dateKey: "2020-6-20",
-  //     values: [
-  //       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-  //       setHours(setMinutes(new Date(), 30), 18),
-  //     ],
-  //   },
-  //   {
-  //     dateKey: "2020-6-22",
-  //     values: [
-  //       setHours(setMinutes(new Date(), 30), 19),
-  //       setHours(setMinutes(new Date(), 30), 17),
-  //     ],
-  //   },
-  // ]);
-
   const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
   //let excludeTimeList: Date[] = [];
 
@@ -271,50 +252,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   //   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
   function ShowSlots(showSlotInfo: ShowSlotsProps) {
-    //{ linkCode }: ShowSlotsProps
-    //  useEvents(showSlotInfo.linkCode).then((newArray) => {
-    //   console.log("I'm in showslots");
-    //   console.log(newArray);
-    //   return(
-    //   <div
-    //     className="form-group"
-    //     style={{ display: "flex", flexDirection: "row" }}
-    //   >
-    //     <DatePicker
-    //       selected={startDate}
-    //       onChange={(date: Date) => {
-    //         setStartDate(date);
-    //         const key = formatDate(date);
-
-    //         console.log("mykey: " + key);
-    //         //TODO: change setExcludeTimeList to get from server query
-
-    //         let tempDictionaryItem = newArray?.find(
-    //           (item) => item.dateKey === key
-    //         );
-    //         if (tempDictionaryItem !== undefined) {
-    //           setExcludeTimeList(tempDictionaryItem.values);
-    //         }
-    //         console.log(excludeTimeList);
-    //         setSelect(true);
-    //       }}
-    //       timeFormat="HH:mm"
-    //       timeIntervals={showSlotInfo.data.link_url.duration}
-    //       inline
-    //     />
-    //     {selectTime && (
-    //       <DatePicker
-    //         showTimeSelect
-    //         showTimeSelectOnly
-    //         selected={startTime}
-    //         onChange={(date: Date) => setStartTime(date)}
-    //         timeFormat="HH:mm"
-    //         timeIntervals={showSlotInfo.data.link_url.duration}
-    //         excludeTimes={excludeTimeList}
-    //         inline
-    //       />
-    //     )}
-    //   </div>);
     console.log("loading show slots again");
     const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
     return loading ? (
@@ -383,55 +320,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
         )}
       </div>
     );
-
-    // return <div></div>;
-
-    // const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
-    // return loading ? (
-    //   <div>loading</div>
-    // ) : error ? (
-    //   <div>An Error occurred: {error}</div>
-    // ) : (
-    //   <div
-    //     className="form-group"
-    //     style={{ display: "flex", flexDirection: "row" }}
-    //   >
-    //     <DatePicker
-    //       selected={startDate}
-    //       onChange={(date: Date) => {
-    //         setStartDate(date);
-    //         const key = formatDate(date);
-
-    //         console.log("mykey: " + key);
-    //         //TODO: change setExcludeTimeList to get from server query
-
-    //         let tempDictionaryItem = resultArray?.find(
-    //           (item) => item.dateKey === key
-    //         );
-    //         if (tempDictionaryItem !== undefined) {
-    //           setExcludeTimeList(tempDictionaryItem.values);
-    //         }
-    //         console.log(excludeTimeList);
-    //         setSelect(true);
-    //       }}
-    //       timeFormat="HH:mm"
-    //       timeIntervals={showSlotInfo.data.link_url.duration}
-    //       inline
-    //     />
-    //     {selectTime && (
-    //       <DatePicker
-    //         showTimeSelect
-    //         showTimeSelectOnly
-    //         selected={startTime}
-    //         onChange={(date: Date) => setStartTime(date)}
-    //         timeFormat="HH:mm"
-    //         timeIntervals={showSlotInfo.data.link_url.duration}
-    //         excludeTimes={excludeTimeList}
-    //         inline
-    //       />
-    //     )}
-    //   </div>
-    // );
   }
 
   const [selectTime, setSelect] = useState(false);
@@ -490,10 +378,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             >
               <h1
                 style={{
-                  // position: "relative",
                   margin: 0,
-                  // float: "left",
-                  // left: "15%",
                   justifyContent: "center",
                   top: 20,
                 }}

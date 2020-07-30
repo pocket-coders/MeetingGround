@@ -2,10 +2,15 @@
   "config": {
     "clientId": "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com",
     "apiKey": "AIzaSyBp8aAD-xwmvna9o1InxK23wkpywLWm0oc",
-    "scope": "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.settings.readonly",
+    "scope": "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.settings.readonly https://www.googleapis.com/auth/calendar.events",
     "discoveryDocs": [
       "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"
     ],
+<<<<<<< HEAD
     "clientSecret": "vpM3s6IXDLcmZtNpkOFbeQMg"
+=======
+    "clientSecret": "vpM3s6IXDLcmZtNpkOFbeQMg",
+    "redirectUri": "http://localhost:3000"
+>>>>>>> 10df49a0a8eef65a3ca78ce449b306a9a373712b
   }
 }

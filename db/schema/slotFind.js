@@ -118,6 +118,7 @@ function getList() {
         });
     });
 }
+<<<<<<< HEAD
 function roundStartTimeQuarterHour(time) {
     var timeToReturn = time;
     timeToReturn.setMilliseconds(Math.floor(timeToReturn.getMilliseconds() / 1000) * 1000);
@@ -135,6 +136,8 @@ function roundEndTimeQuarterHour(time) {
 var formatDate = function (date) {
     return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
 };
+=======
+>>>>>>> 10df49a0a8eef65a3ca78ce449b306a9a373712b
 function slotQuery(refreshCode) {
     return __awaiter(this, void 0, void 0, function () {
         var result;
