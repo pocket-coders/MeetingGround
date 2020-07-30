@@ -107,8 +107,8 @@ type DictionaryItem = {
 };
 
 const excludeQuery = gql`
-  query($link: String) {
-    list_available_slots(url: $link) {
+  query($url: String) {
+    list_available_slots(url: $url) {
       start
       end
     }
@@ -151,46 +151,67 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   function useEvents(link: string) {
     const { loading, error, data } = useQuery(excludeQuery, {
-      variables: { link },
+      variables: { url: link },
     });
-    const available_slots = data.list_available_slots;
+    console.log("DATAA HERE");
+
+    // console.log(data.list_available_slots);
+
+    const available_slots = data?.list_available_slots;
+    console.log(available_slots);
+
     try {
+      console.log("Listing items");
       available_slots.map((item: any) => {
-        let myDateKey: string = formatDate(item.start);
-        item.start = roundStartTimeQuarterHour(item.start);
-        item.end = roundEndTimeQuarterHour(item.end);
+        console.log(item);
+        let start = new Date(roundStartTimeQuarterHour(new Date(item.start)));
+        let end = new Date(roundEndTimeQuarterHour(new Date(item.end)));
+        let myDateKey: string = formatDate(start);
 
-        let currTimeToBeAdded = item.start;
+        console.log("start" + start);
+        console.log("end" + end);
 
-        let foundDate = resultArray?.find((item) => item.dateKey === myDateKey);
+        let currTimeToBeAdded = start;
+
+        let foundDate = resultArray.find((item) => item.dateKey === myDateKey);
+        console.log("curr tiem to be added: " + currTimeToBeAdded);
         if (foundDate) {
-          while (currTimeToBeAdded < item.end) {
+          // console.log("if found date");
+          console.log("foundDate before");
+          console.log(foundDate);
+          while (currTimeToBeAdded < end) {
             foundDate.values.push(currTimeToBeAdded);
-            currTimeToBeAdded.setTime(
-              currTimeToBeAdded.getTime() + 15 * 1000 * 60
+            currTimeToBeAdded = new Date(
+              currTimeToBeAdded.getTime() + 15 * 60000
             );
+            console.log("add 15 currtimetobeadded: " + currTimeToBeAdded);
           }
+          console.log("foundDate after");
+          console.log(foundDate);
         } else {
+          //console.log("else found date");
           let tempObject: DictionaryItem = {
             dateKey: myDateKey,
             values: [],
           };
-          while (currTimeToBeAdded < item.end) {
+          while (currTimeToBeAdded < end) {
             tempObject.values.push(currTimeToBeAdded);
-            currTimeToBeAdded.setTime(
-              currTimeToBeAdded.getTime() + 15 * 1000 * 60
+            currTimeToBeAdded = new Date(
+              currTimeToBeAdded.getTime() + 15 * 60000
             );
+            console.log("add 15 currtimetobeadded: " + currTimeToBeAdded);
           }
           resultArray.push(tempObject);
         }
-        console.log(resultArray);
-        //return Promise.resolve(resultArray);
       });
+      console.log("RESULT ARRAY");
+      console.log(resultArray);
+      //return Promise.resolve(resultArray);
     } catch (err) {
       console.log("an error in the mapping of result array dictionary");
       console.log(err);
       resultArray = [];
-      //return Promise.resolve(tempResult);
+      //return Promise.resolve(resultArray);
     }
     // const events = ;
 
@@ -217,6 +238,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   // ]);
 
   const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+  //let excludeTimeList: Date[] = [];
 
   type ShowSlotsProps = {
     linkCode: string;
@@ -250,6 +272,50 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   function ShowSlots(showSlotInfo: ShowSlotsProps) {
     //{ linkCode }: ShowSlotsProps
+    //  useEvents(showSlotInfo.linkCode).then((newArray) => {
+    //   console.log("I'm in showslots");
+    //   console.log(newArray);
+    //   return(
+    //   <div
+    //     className="form-group"
+    //     style={{ display: "flex", flexDirection: "row" }}
+    //   >
+    //     <DatePicker
+    //       selected={startDate}
+    //       onChange={(date: Date) => {
+    //         setStartDate(date);
+    //         const key = formatDate(date);
+
+    //         console.log("mykey: " + key);
+    //         //TODO: change setExcludeTimeList to get from server query
+
+    //         let tempDictionaryItem = newArray?.find(
+    //           (item) => item.dateKey === key
+    //         );
+    //         if (tempDictionaryItem !== undefined) {
+    //           setExcludeTimeList(tempDictionaryItem.values);
+    //         }
+    //         console.log(excludeTimeList);
+    //         setSelect(true);
+    //       }}
+    //       timeFormat="HH:mm"
+    //       timeIntervals={showSlotInfo.data.link_url.duration}
+    //       inline
+    //     />
+    //     {selectTime && (
+    //       <DatePicker
+    //         showTimeSelect
+    //         showTimeSelectOnly
+    //         selected={startTime}
+    //         onChange={(date: Date) => setStartTime(date)}
+    //         timeFormat="HH:mm"
+    //         timeIntervals={showSlotInfo.data.link_url.duration}
+    //         excludeTimes={excludeTimeList}
+    //         inline
+    //       />
+    //     )}
+    //   </div>);
+    console.log("loading show slots again");
     const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
     return loading ? (
       <div>loading</div>
@@ -263,18 +329,35 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
         <DatePicker
           selected={startDate}
           onChange={(date: Date) => {
+            console.log("DATE CHANGED");
             setStartDate(date);
             const key = formatDate(date);
 
             console.log("mykey: " + key);
             //TODO: change setExcludeTimeList to get from server query
 
-            let tempDictionaryItem = resultArray?.find(
-              (item) => item.dateKey === key
+            let tempDictionaryItem = resultArray.find(
+              (item: any) => item.dateKey === key
             );
+
             if (tempDictionaryItem !== undefined) {
-              setExcludeTimeList(tempDictionaryItem.values);
+              console.log("setting exclude time list");
+              let newDictionaryItemList: Date[] = [];
+              tempDictionaryItem.values.map((input) => {
+                let newInput = setSeconds(
+                  setMinutes(
+                    setHours(new Date(), input.getHours()),
+                    input.getMinutes()
+                  ),
+                  0
+                );
+                newDictionaryItemList.push(newInput);
+              });
+
+              setExcludeTimeList(newDictionaryItemList);
+              // excludeTimeList = newDictionaryItemList;
             }
+            console.log("EXCLUDE TIME LIST");
             console.log(excludeTimeList);
             setSelect(true);
           }}
@@ -287,7 +370,11 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             showTimeSelect
             showTimeSelectOnly
             selected={startTime}
-            onChange={(date: Date) => setStartTime(date)}
+            onChange={(date: Date) => {
+              setStartTime(date);
+              console.log("the list after the click WHYYYYYYYYYY");
+              console.log(excludeTimeList);
+            }}
             timeFormat="HH:mm"
             timeIntervals={showSlotInfo.data.link_url.duration}
             excludeTimes={excludeTimeList}
@@ -296,6 +383,55 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
         )}
       </div>
     );
+
+    // return <div></div>;
+
+    // const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
+    // return loading ? (
+    //   <div>loading</div>
+    // ) : error ? (
+    //   <div>An Error occurred: {error}</div>
+    // ) : (
+    //   <div
+    //     className="form-group"
+    //     style={{ display: "flex", flexDirection: "row" }}
+    //   >
+    //     <DatePicker
+    //       selected={startDate}
+    //       onChange={(date: Date) => {
+    //         setStartDate(date);
+    //         const key = formatDate(date);
+
+    //         console.log("mykey: " + key);
+    //         //TODO: change setExcludeTimeList to get from server query
+
+    //         let tempDictionaryItem = resultArray?.find(
+    //           (item) => item.dateKey === key
+    //         );
+    //         if (tempDictionaryItem !== undefined) {
+    //           setExcludeTimeList(tempDictionaryItem.values);
+    //         }
+    //         console.log(excludeTimeList);
+    //         setSelect(true);
+    //       }}
+    //       timeFormat="HH:mm"
+    //       timeIntervals={showSlotInfo.data.link_url.duration}
+    //       inline
+    //     />
+    //     {selectTime && (
+    //       <DatePicker
+    //         showTimeSelect
+    //         showTimeSelectOnly
+    //         selected={startTime}
+    //         onChange={(date: Date) => setStartTime(date)}
+    //         timeFormat="HH:mm"
+    //         timeIntervals={showSlotInfo.data.link_url.duration}
+    //         excludeTimes={excludeTimeList}
+    //         inline
+    //       />
+    //     )}
+    //   </div>
+    // );
   }
 
   const [selectTime, setSelect] = useState(false);
