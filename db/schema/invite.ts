@@ -2,11 +2,24 @@ const config = require("./apiGoogleconfig.json");
 const moment = require("moment");
 const axios = require("axios");
 
+const clientId =
+  "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com";
+// const apiKey = "AIzaSyBp8aAD-xwmvna9o1InxK23wkpywLWm0oc";
+const scope = [
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/calendar",
+  "https://www.googleapis.com/auth/calendar.settings.readonly",
+  "https://www.googleapis.com/auth/calendar.events",
+];
+const clientSecret = "vpM3s6IXDLcmZtNpkOFbeQMg";
+const redirectUri = "http://localhost:3000";
+
 const { google } = require("googleapis");
 const oauth2Client = new google.auth.OAuth2(
-  config.clientId,
-  config.clientSecret,
-  config.redirectUri
+  clientId,
+  clientSecret,
+  redirectUri
 );
 
 google.options({
@@ -18,9 +31,9 @@ async function getAccessToken(refresh_token: any) {
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", {
       refresh_token,
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-      redirect_uri: config.redirectUri,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
       grant_type: "refresh_token",
     });
     return Promise.resolve(response.data.access_token);
@@ -46,13 +59,15 @@ async function invite(
   email: string,
   userName: string,
   comment: string,
-  startTime: string
+  startTime: string,
+  hostFirst: string,
+  hostLast: string
 ): Promise<boolean> {
   return getAccessToken(refreshToken)
     .then((res) => {
       oauth2Client.setCredentials({
         access_token: res,
-        scope: config.scope,
+        scope: scope,
       });
       console.log("used this token: " + res);
     })
@@ -62,7 +77,9 @@ async function invite(
         email,
         userName,
         comment,
-        new Date(startTime)
+        new Date(startTime),
+        hostFirst,
+        hostLast
       ).then((res) => {
         if (res) {
           return Promise.resolve(true);
@@ -104,7 +121,9 @@ async function sendInvite(
   email: string,
   userName: string,
   comment: string,
-  startTime: Date
+  startTime: Date,
+  hostFirst: string,
+  hostLast: string
 ) {
   // let result: boolean;
   const start: string = startTime.toString();
@@ -112,7 +131,7 @@ async function sendInvite(
   console.log(start);
   console.log(timeZone);
   const event = {
-    summary: "Meeting with " + userName,
+    summary: "Meeting: " + userName + " & " + hostFirst + " " + hostLast,
     location: "Online",
     description: comment,
     start: {
@@ -140,21 +159,22 @@ async function sendInvite(
   };
 
   try {
-    const response = await calendar.events
-      .insert({
-        calendarId: "primary",
-        resource: event,
-        sendNotifications: true,
-        sendUpdates: "all",
-      })
-      .execute((event: any) => {
-        console.log("Event created: " + event.status);
-        return Promise.resolve(true);
-        // result = event.status.toLocaleString() === "complete";
-      });
+    await calendar.events.insert({
+      calendarId: "primary",
+      resource: event,
+      sendNotifications: true,
+      sendUpdates: "all",
+    });
+    // .execute((event: any) => {
+    //   console.log("Event created: " + event.status);
+
+    //   // result = event.status.toLocaleString() === "complete";
+    // });
+    return Promise.resolve(true);
   } catch (err) {
     console.log("an error in the list");
     console.log(err);
     return Promise.resolve(false);
   }
 }
+export default invite;

@@ -1,5 +1,6 @@
 import * as graphql from "graphql";
 import slotQuery from "./slotFind";
+import invite from "./invite";
 const _ = require("lodash");
 const Link = require("../models/link");
 const Host = require("../models/host");
@@ -14,6 +15,7 @@ const {
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLBoolean,
 } = graphql;
 
 async function getRefreshToken(code: any) {
@@ -73,6 +75,19 @@ const HostType = new GraphQLObjectType({
   }),
 });
 
+const EventCreateType = new GraphQLObjectType({
+  name: "state",
+  fields: () => ({
+    state: {
+      type: GraphQLBoolean,
+    },
+  }),
+});
+
+type eventCreateAction = {
+  state: boolean;
+};
+
 const SlotType = new GraphQLObjectType({
   name: "Slot",
   fields: () => ({
@@ -80,14 +95,6 @@ const SlotType = new GraphQLObjectType({
     end: { type: GraphQLString },
   }),
 });
-
-// const DicItem = new GraphQLObjectType({
-//   name: "DicItem",
-//   fields: () => ({
-//     datekey: { type: GraphQLString },
-//     values: {type: new GraphQLList(SlotType)}
-//   }),
-// });
 
 type SlotTypeEvent = {
   start: string;
@@ -119,18 +126,16 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const link = Link.findOne(args); //use url link to get Link object
         const link_object = await Link.findOne(args).select("hostId").exec();
-        const host = Host.findOne({ _id: link_object.hostId }); //use Link object to get Host object
+        const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
         //const refresh_token = Host.find({host.refresh_token}); //use host object to get host refresh token
 
         const refresh_token_object = await Host.findOne({
-          //use Link object to get Host object and //use host object to get host refresh token
           _id: link_object.hostId,
         })
           .select("refresh_token")
           .exec();
 
-        console.log("HEHRHERHEHREHR");
-        console.log(refresh_token_object.refresh_token);
+        //console.log(refresh_token_object.refresh_token);
 
         const slots = await slotQuery(refresh_token_object.refresh_token); //use refresh token to get list of excluded events
 
@@ -145,6 +150,66 @@ const RootQuery = new GraphQLObjectType({
         return tempResults;
       },
     },
+    // create_event: {
+    //   type: EventCreateType,
+    //   args: {
+    //     url: { type: new GraphQLNonNull(GraphQLString) },
+    //     email: { type: new GraphQLNonNull(GraphQLString) },
+    //     username: { type: new GraphQLNonNull(GraphQLString) },
+    //     comment: { type: new GraphQLNonNull(GraphQLString) },
+    //     startTime: { type: new GraphQLNonNull(GraphQLString) },
+    //   },
+    //   async resolve(
+    //     parent,
+    //     // args
+    //     { url, duration, email, username, comment, startTime }
+    //   ) {
+    //     console.log("the variable are: ", {
+    //       url,
+    //       duration,
+    //       email,
+    //       username,
+    //       comment,
+    //       startTime,
+    //     });
+    //     // const link = Link.findById(url); //use url link to get Link object
+    //     const link_object = await Link.findOne({ url }).select("hostId").exec();
+    //     // const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
+    //     const link_object_duration = await Link.findOne({ url })
+    //       .select("duration")
+    //       .exec();
+    //     const refresh_token_object = await Host.findOne({
+    //       _id: link_object.hostId,
+    //     })
+    //       .select("refresh_token")
+    //       .exec();
+    //     const host_first = await Host.findOne({
+    //       _id: link_object.hostId,
+    //     })
+    //       .select("Fname")
+    //       .exec();
+    //     const host_last = await Host.findOne({
+    //       _id: link_object.hostId,
+    //     })
+    //       .select("Lname")
+    //       .exec();
+    //     const slots = await invite(
+    //       refresh_token_object.refresh_token,
+    //       link_object_duration.duration,
+    //       email,
+    //       username,
+    //       comment,
+    //       startTime,
+    //       host_first.Fname,
+    //       host_last.Lname
+    //     ); //use refresh token to get list of excluded events
+    //     console.log(slots);
+    //     let tempEvent: eventCreateAction = {
+    //       state: slots,
+    //     };
+    //     return tempEvent;
+    //   },
+    // },
     host: {
       type: HostType,
       args: { id: { type: GraphQLID } },
@@ -173,12 +238,6 @@ const RootQuery = new GraphQLObjectType({
         return Host.find({});
       },
     },
-    // refresh_token: {
-    //   type: GraphQLString,
-    //   resolve(parent, args) {
-    //     return
-    //   }
-    // }
   },
 });
 
@@ -188,6 +247,11 @@ async function checkHostsExists(email: string): Promise<boolean> {
   return hv;
 }
 
+async function checkLinkExists(url: string): Promise<boolean> {
+  const h: Promise<typeof Host> = Link.findOne({ url });
+  const hv = !!(await h);
+  return hv;
+}
 // Mutations
 const Mutation = new GraphQLObjectType({
   name: "Mutation",
@@ -234,13 +298,78 @@ const Mutation = new GraphQLObjectType({
         duration: { type: new GraphQLNonNull(GraphQLInt) },
         hostId: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve(parent, args) {
-        let link = new Link({
-          url: args.url,
-          duration: args.duration,
-          hostId: args.hostId,
+      async resolve(parent, { url, duration, hostId }) {
+        console.log("Variables are: ", { url, duration, hostId });
+        const linkExists = await checkLinkExists(url);
+        if (!linkExists) {
+          const link = new Link({
+            url: url,
+            duration: duration,
+            hostId: hostId,
+          });
+          console.log("link added to data base");
+          return link.save(); //save to the database and return results
+        }
+        return null;
+      },
+    },
+    create_event: {
+      type: EventCreateType,
+      args: {
+        url: { type: new GraphQLNonNull(GraphQLString) },
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        username: { type: new GraphQLNonNull(GraphQLString) },
+        comment: { type: new GraphQLNonNull(GraphQLString) },
+        startTime: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      async resolve(
+        parent,
+        // args
+        { url, duration, email, username, comment, startTime }
+      ) {
+        console.log("the variable are: ", {
+          url,
+          email,
+          username,
+          comment,
+          startTime,
         });
-        return link.save(); //save to the database and return results
+        // const link = Link.findById(url); //use url link to get Link object
+        const link_object = await Link.findOne({ url }).select("hostId").exec();
+        // const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
+        const link_object_duration = await Link.findOne({ url })
+          .select("duration")
+          .exec();
+        const refresh_token_object = await Host.findOne({
+          _id: link_object.hostId,
+        })
+          .select("refresh_token")
+          .exec();
+        const host_first = await Host.findOne({
+          _id: link_object.hostId,
+        })
+          .select("Fname")
+          .exec();
+        const host_last = await Host.findOne({
+          _id: link_object.hostId,
+        })
+          .select("Lname")
+          .exec();
+        const slots = await invite(
+          refresh_token_object.refresh_token,
+          link_object_duration.duration,
+          email,
+          username,
+          comment,
+          startTime,
+          host_first.Fname,
+          host_last.Lname
+        ); //use refresh token to get list of excluded events
+        console.log(slots);
+        let tempEvent: eventCreateAction = {
+          state: slots,
+        };
+        return tempEvent;
       },
     },
   },
