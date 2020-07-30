@@ -6,11 +6,7 @@
     "discoveryDocs": [
       "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"
     ],
-<<<<<<< HEAD
-    "clientSecret": "vpM3s6IXDLcmZtNpkOFbeQMg"
-=======
     "clientSecret": "vpM3s6IXDLcmZtNpkOFbeQMg",
     "redirectUri": "http://localhost:3000"
->>>>>>> 10df49a0a8eef65a3ca78ce449b306a9a373712b
   }
 }
