@@ -62,10 +62,11 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
     return result;
   }
   const getUrl = async () => {
-    const tempId = "meetingground.com/signup/" + emailID + "/" + makeid(16);
+    const urlIdLastPart = makeid(16);
+    const tempId = "meetingground.com/signup/" + emailID + "/" + urlIdLastPart;
     setUrl(tempId);
     console.log("my url: " + url);
-    return Promise.resolve(tempId);
+    return Promise.resolve(urlIdLastPart);
   };
 
   async function addLinkToDb(tempUrl: string) {
@@ -108,44 +109,6 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
     height: 300px;
     width: 200px;
   `;
-
-  // return loadingHostId ? (
-  //   <div>loading</div>
-  // ) : errorHostId ? (
-  //   <div>error host id"</div>
-  // ) : (
-  //   <ScheduleEnginePack>
-  //     <ScheduleCard timeLength={timeLength} />
-  //     <form
-  //       style={{
-  //         margin: 15,
-  //         alignContent: "center",
-  //         justifyContent: "center",
-  //         flexDirection: "column",
-  //       }}
-  //     >
-  //       <input id="random_url" value={url} />
-  //       <div style={{ flexDirection: "column" }}>
-  //         <button
-  //           onClick={(e) => handleGenerate(e)}
-  //           type="button"
-  //           className="btn btn-secondary"
-  //           style={{ padding: 2, margin: 15 }}
-  //         >
-  //           Generate Link
-  //         </button>
-  //         <button
-  //           onClick={(e) => copyLink(e)}
-  //           type="button"
-  //           className="btn btn-secondary"
-  //           style={{ padding: 2, margin: 15 }}
-  //         >
-  //           copy
-  //         </button>
-  //       </div>
-  //     </form>
-  //   </ScheduleEnginePack>
-  // );
 
   return (
     <ScheduleEnginePack>
