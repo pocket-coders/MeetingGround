@@ -28,16 +28,16 @@ interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
 
-const cache = new InMemoryCache();
+// const cache = new InMemoryCache();
 
-const link = new HttpLink({
-  uri: "http://localhost:4000/graphql",
-});
+// const link = new HttpLink({
+//   uri: "http://localhost:4000/graphql",
+// });
 
-const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-  cache,
-  link,
-});
+// const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
+//   cache,
+//   link,
+// });
 
 //const id = this.props.match.params.id  ;//this.props.match.params.id;
 type Host = {
@@ -119,7 +119,10 @@ type DictionaryItem = {
 
 const excludeQuery = gql`
   query($link: String) {
-    list_available_slots(url: $link)
+    list_available_slots(url: $link) {
+      start
+      end
+    }
   }
 `;
 
@@ -146,8 +149,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   const [startTime, setStartTime] = useState<Date>(
     setHours(setMinutes(new Date(), 30), 16)
   );
-  //const [interval, setInterval] = useState(45);
-  const [userEmail, setUserEmail] = useState("");
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
@@ -273,7 +274,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
-      variables: { id: urlId.urlid },
+      variables: { url: urlId.urlid },
     });
 
     return loading ? (
@@ -339,23 +340,14 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   return (
     <ApolloProvider client={client}>
-      {/* <SignUpServer /> */}
-
       <IntervalSetup />
-
-      {/* <CalendarCard>
-        <IntervalSetup />
-      </CalendarCard> */}
-      {/* <CalendarCard>
-        <MyCalendar myList={temp} />
-      </CalendarCard> */}
     </ApolloProvider>
   );
 };
 
 function SignUpServer() {
   const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
-    variables: { id: urlId.urlid },
+    variables: { url: urlId.urlid },
   });
   return loading ? (
     <div>loading</div>
@@ -371,11 +363,11 @@ function SignUpServer() {
 }
 
 const GET_UNIQUE_LINK = gql`
-  query($id: String) {
-    link(id: $id) {
-      email
+  query($url: String) {
+    link_url(url: $url) {
+      url
       duration
-      link
+      host
     }
   }
 `;
