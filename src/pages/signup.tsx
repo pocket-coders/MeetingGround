@@ -24,22 +24,11 @@ import setHours from "date-fns/setHours";
 import logo from "./img/meetingGroundLogo.png";
 
 import Redirect, { withRouter } from "react-router-dom";
+import { stringify } from "querystring";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
 
-// const cache = new InMemoryCache();
-
-// const link = new HttpLink({
-//   uri: "http://localhost:4000/graphql",
-// });
-
-// const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-//   cache,
-//   link,
-// });
-
-//const id = this.props.match.params.id  ;//this.props.match.params.id;
 type Host = {
   // Mistake #3: The type is wrong here, and that should be caught at compile-time
   email: string;
@@ -126,21 +115,25 @@ const excludeQuery = gql`
   }
 `;
 
-function useEvents(link: string) {
-  const { loading, error, data } = useQuery<{ events: DictionaryItem[] }>(
-    excludeQuery,
-    { variables: { link } }
-  );
-  const events = data?.events;
-
-  return { loading, error, events };
-}
+const GET_UNIQUE_LINK = gql`
+  query($url: String) {
+    link_url(url: $url) {
+      url
+      duration
+    }
+  }
+`;
 
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
 ) => {
   const id = props.match.params.id;
   urlId.urlid = id;
+
+  type slotType = {
+    start: string;
+    end: string;
+  };
 
   const [startDate, setStartDate] = useState<Date>(
     setHours(setMinutes(new Date(), 30), 16)
@@ -154,49 +147,110 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
-  const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
-    DictionaryItem[]
-  >([
-    {
-      dateKey: "2020-6-20",
-      values: [
-        setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-        setHours(setMinutes(new Date(), 30), 18),
-      ],
-    },
-    {
-      dateKey: "2020-6-22",
-      values: [
-        setHours(setMinutes(new Date(), 30), 19),
-        setHours(setMinutes(new Date(), 30), 17),
-      ],
-    },
-  ]);
-  //setExcludeTimeDictionary();
-  //let excludeTimeList: Date[] = [];
+  let resultArray: DictionaryItem[] = [];
+
+  function useEvents(link: string) {
+    const { loading, error, data } = useQuery(excludeQuery, {
+      variables: { link },
+    });
+    const available_slots = data.list_available_slots;
+    try {
+      available_slots.map((item: any) => {
+        let myDateKey: string = formatDate(item.start);
+        item.start = roundStartTimeQuarterHour(item.start);
+        item.end = roundEndTimeQuarterHour(item.end);
+
+        let currTimeToBeAdded = item.start;
+
+        let foundDate = resultArray?.find((item) => item.dateKey === myDateKey);
+        if (foundDate) {
+          while (currTimeToBeAdded < item.end) {
+            foundDate.values.push(currTimeToBeAdded);
+            currTimeToBeAdded.setTime(
+              currTimeToBeAdded.getTime() + 15 * 1000 * 60
+            );
+          }
+        } else {
+          let tempObject: DictionaryItem = {
+            dateKey: myDateKey,
+            values: [],
+          };
+          while (currTimeToBeAdded < item.end) {
+            tempObject.values.push(currTimeToBeAdded);
+            currTimeToBeAdded.setTime(
+              currTimeToBeAdded.getTime() + 15 * 1000 * 60
+            );
+          }
+          resultArray.push(tempObject);
+        }
+        console.log(resultArray);
+        //return Promise.resolve(resultArray);
+      });
+    } catch (err) {
+      console.log("an error in the mapping of result array dictionary");
+      console.log(err);
+      resultArray = [];
+      //return Promise.resolve(tempResult);
+    }
+    // const events = ;
+
+    return { loading, error, resultArray };
+  }
+
+  // const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
+  //   DictionaryItem[]
+  // >([
+  //   {
+  //     dateKey: "2020-6-20",
+  //     values: [
+  //       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+  //       setHours(setMinutes(new Date(), 30), 18),
+  //     ],
+  //   },
+  //   {
+  //     dateKey: "2020-6-22",
+  //     values: [
+  //       setHours(setMinutes(new Date(), 30), 19),
+  //       setHours(setMinutes(new Date(), 30), 17),
+  //     ],
+  //   },
+  // ]);
+
   const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
-
-  //TODO: BELOW IS FOR WHEN DATABASE IS CONNECTED
-  // function useEvents(linkCode: string) {
-  //     return useQuery(GetEventsQuery, variable: { linkCode } );
-  // }
-
-  // function useEvents(linkCode: string) {
-  //   return {
-  //     loading: false,
-  //     error: null,
-  //     events: excludeTimeDictionary,
-  //   };
-  // }
 
   type ShowSlotsProps = {
     linkCode: string;
     data: any;
   };
 
+  function roundStartTimeQuarterHour(time: Date) {
+    const timeToReturn = time;
+
+    timeToReturn.setMilliseconds(
+      Math.floor(timeToReturn.getMilliseconds() / 1000) * 1000
+    );
+    timeToReturn.setSeconds(Math.floor(timeToReturn.getSeconds() / 60) * 60);
+    timeToReturn.setMinutes(Math.floor(timeToReturn.getMinutes() / 15) * 15);
+    return timeToReturn;
+  }
+
+  function roundEndTimeQuarterHour(time: Date) {
+    const timeToReturn = time;
+
+    timeToReturn.setMilliseconds(
+      Math.ceil(timeToReturn.getMilliseconds() / 1000) * 1000
+    );
+    timeToReturn.setSeconds(Math.ceil(timeToReturn.getSeconds() / 60) * 60);
+    timeToReturn.setMinutes(Math.ceil(timeToReturn.getMinutes() / 15) * 15);
+    return timeToReturn;
+  }
+
+  // const formatDate = (date: Date) =>
+  //   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
   function ShowSlots(showSlotInfo: ShowSlotsProps) {
     //{ linkCode }: ShowSlotsProps
-    const { loading, error, events } = useEvents(showSlotInfo.linkCode);
+    const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
     return loading ? (
       <div>loading</div>
     ) : error ? (
@@ -215,7 +269,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             console.log("mykey: " + key);
             //TODO: change setExcludeTimeList to get from server query
 
-            let tempDictionaryItem = events?.find(
+            let tempDictionaryItem = resultArray?.find(
               (item) => item.dateKey === key
             );
             if (tempDictionaryItem !== undefined) {
@@ -345,13 +399,63 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   );
 };
 
-const GET_UNIQUE_LINK = gql`
-  query($url: String) {
-    link_url(url: $url) {
-      url
-      duration
-    }
-  }
-`;
-
 export default SignUpPage;
+
+// return Promise.resolve([
+//   {
+//     dateKey: "2020-6-20",
+//     values: [
+//       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+//       setHours(setMinutes(new Date(), 30), 18),
+//     ],
+//   },
+//   {
+//     dateKey: "2020-6-22",
+//     values: [
+//       setHours(setMinutes(new Date(), 30), 19),
+//       setHours(setMinutes(new Date(), 30), 17),
+//     ],
+//   },
+// ]);
+
+//TODO: put this on client
+// let resultArray: DictionaryItem[] = [];
+// try {
+//   rv.map((item: any) => {
+//     let myDateKey: string = formatDate(item.start);
+//     item.start = roundStartTimeQuarterHour(item.start);
+//     item.end = roundStartTimeQuarterHour(item.end);
+
+//     let currTimeToBeAdded = item.start;
+
+//     let foundDate = resultArray?.find(
+//       (item) => item.dateKey === myDateKey
+//     );
+//     if (foundDate) {
+//       while (currTimeToBeAdded < item.end) {
+//         foundDate.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//     } else {
+//       let tempObject: DictionaryItem = {
+//         dateKey: myDateKey,
+//         values: [],
+//       };
+//       while (currTimeToBeAdded < item.end) {
+//         tempObject.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//       resultArray.push(tempObject);
+//     }
+//     console.log(resultArray);
+//     return Promise.resolve(resultArray);
+//   });
+// } catch (err) {
+//   console.log("an error in the mapping of result array dictionary");
+//   console.log(err);
+//   return Promise.resolve(<DictionaryItem[]>[]);
+// }
