@@ -2,11 +2,9 @@
 import { useForm } from "react-hook-form";
 import { RouteComponentProps } from "react-router-dom";
 //You have to use the link component to link between you pages
-
 import styled from "@emotion/styled";
 import logo from "./img/meetingGroundLogo.png";
 import React, { useState } from "react";
-import { useQuery } from "@apollo/react-hooks";
 // yarn add react-hook-form
 //You have to use the link component to link between you pages
 import { useMutation } from "react-apollo";
@@ -87,38 +85,6 @@ const createEvent = gql`
     }
   }
 `;
-// async function getNewAccessToken(refreshToken: any) {
-//   let data = {
-//     client_id: config.config.clientId,
-//     client_secret: config.config.clientSecret,
-//     refresh_token: refreshToken,
-//     grant_type: "refresh_token",
-//   };
-//   let myaccesstoken = await fetch(
-//     "https://www.googleapis.com/oauth2/v2/token",
-//     {
-//       method: "post",
-//       headers: {
-//         Content_Type: "application/json",
-//         // client_id: config.config.clientId,
-//         // client_secret: config.config.clientSecret,
-//         // refresh_token: refreshToken,
-//         // grant_type: "refresh_token",
-//       },
-//       body: JSON.stringify(data),
-//       // body: {
-//       //   client_id: config.config.clientId,
-//       //   client_secret: config.config.clientSecret,
-//       //   refresh_token: refreshToken,
-//       //   grant_type: "refresh_token",
-//       // }
-//     }
-//   )
-//     .then((response) => {
-//       console.log(response.json());
-//     })
-//     .then((json) => console.log(json));
-// }
 
 const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
   props: SubmitPagePropsInterface
@@ -168,7 +134,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
       window.alert("invalid email");
     } else {
       inviteTo(data);
-      // Submit(data);
+      props.history.push("/confirmation");
     }
   };
 
@@ -190,10 +156,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
           >
             <h1
               style={{
-                // position: "relative",
                 margin: 0,
-                // float: "left",
-                // left: "15%",
                 justifyContent: "center",
                 top: 20,
               }}
@@ -216,20 +179,6 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
               <label htmlFor="firstName">
                 First Name
                 <Inputformat name="firstName" id="firstName" ref={register} />
-                {/* <input
-                name="firstName"
-                id="firstName"
-                ref={register}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  margin: "8px 0",
-                  display: "inline-block",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  boxSizing: "border-box",
-                }}
-              /> */}
               </label>
 
               <label htmlFor="lastName">
@@ -268,73 +217,5 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     </body>
   );
 };
-
-// const HostInfo: {
-//   firstname: string;
-//   lastname: string;
-//   code: string;
-// } = {
-//   code: "",
-//   firstname: "",
-//   lastname: "",
-// };
-
-// function GetHostEmail() {
-//   const [tempdata, setdata] = useState<any>();
-//   const {
-//     loading: loadingEmail,
-//     error: errorEmail,
-//     data: dataEmail,
-//   } = useQuery(GET_HOST_EMAIL, {
-//     variables: { id: urlId.urlid },
-//   });
-
-//   loadingEmail
-//     ? console.log("loading Email")
-//     : errorEmail
-//     ? console.log("An Error occurred:" + { errorEmail })
-//     : (meetingInfo.hostEmail = dataEmail.link.email) &&
-//       (meetingInfo.duration = dataEmail.link.duration);
-
-//   console.log(meetingInfo.hostEmail);
-
-//   const { loading: loadingCode, error: errorCode, data: dataCode } = useQuery(
-//     GET_GOA_CODE,
-//     {
-//       variables: { id: meetingInfo.hostEmail },
-//     }
-//   );
-
-//   loadingCode
-//     ? console.log("loading access")
-//     : errorCode
-//     ? console.log("An Error occurred:" + { errorCode })
-//     : (HostInfo.code = dataCode.email.goa_code) &&
-//       (HostInfo.firstname = dataCode.email.firstname) &&
-//       (HostInfo.lastname = dataCode.email.lastname);
-
-//   console.log(HostInfo.code);
-
-//   return <div>the Email is authentified</div>;
-// }
-
-// const GET_HOST_EMAIL = gql`
-//   query($id: String) {
-//     link(id: $id) {
-//       email
-//       duration
-//     }
-//   }
-// `;
-
-// const GET_GOA_CODE = gql`
-//   query($id: String) {
-//     email(id: $id) {
-//       goa_code
-//       firstname
-//       lastname
-//     }
-//   }
-// `;
 
 export default SubmitInfoPage;
