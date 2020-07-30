@@ -27,7 +27,6 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
   timeLength,
   emailID,
 }) => {
-  // const [hostID, setHostID] = useState<string>("");
   const [duration, setDuration] = useState<number>(timeLength);
   const [mutate] = useMutation(appendLinktoDB);
   const [url, setUrl] = useState("");
@@ -51,75 +50,6 @@ const ScheduleEngine: React.FC<{ timeLength: number; emailID: string }> = ({
     : (hostID.id = hostIdData.host_email.id);
 
   console.log("host id here: " + hostID.id);
-
-  // function checkEmail() {
-  //   if (hostIdData.host_email === null) {
-  //     console.log("it is false");
-
-  //     //props.history.push("/404");
-  //     return (
-  //       <div>
-  //         <Link to="/404"></Link>
-  //       </div>
-  //     );
-  //   } else {
-  //     // console.log("it is true");
-  //     // hostID(temp.host_email.id);
-  //     return true;
-  //   }
-  // }
-
-  // loadingHostId
-  //   ? //<div>loading</div>
-  //     console.log("loading host id")
-  //   : errorHostId
-  //   ? console.log("error host id")
-  //   : hostIdData.host_email !== null && setHostID(hostIdData.host_email.id);
-
-  // useEffect(() => {
-  //   console.log("USE EFFECT RUNNING");
-  //   async function addLinkToDb() {
-  //     const arg = await mutate({
-  //       variables: {
-  //         url: "urlkjhgfvhjkpoiuytrdcvbnklpoiuy",
-  //         duration: 14,
-  //         hostId: "5f207f82e8a5300b4e3211dd",
-  //       },
-  //     });
-  //     console.log(arg);
-  //   }
-  //   addLinkToDb()
-  //     .then(() => {
-  //       console.log(" linkn appended successfully");
-  //     })
-  //     .catch((err) => {
-  //       console.log("an error happened on the link");
-  //     });
-  // }, []); //url, hostID, duration, mutate
-
-  //variable schedule is an object that consists of timelength and url.
-  //url left blank when not generated
-  // const scheduling: {
-  //   time: typeof timeLength;
-  //   url: string;
-  // } = {
-  //   time: timeLength,
-  //   url: "",
-  // };
-  // const {
-  //   loading: loadingHostId,
-  //   error: errorHostId,
-  //   data: hostIdData,
-  // } = useQuery(getHostId, {
-  //   variables: { email: emailID },
-  // });
-
-  // loadingHostId
-  //   ? //<div>loading</div>
-  //     console.log("loading host id")
-  //   : errorHostId
-  //   ? console.log("error host id")
-  //   : hostIdData.host_email !== null && setHostID(hostIdData.host_email.id);
 
   function makeid(length: number) {
     var result = "";
