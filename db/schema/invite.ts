@@ -46,9 +46,9 @@ async function invite(
   email: string,
   userName: string,
   comment: string,
-  startTime: Date
-) {
-  const access = getAccessToken(refreshToken)
+  startTime: string
+): Promise<boolean> {
+  return getAccessToken(refreshToken)
     .then((res) => {
       oauth2Client.setCredentials({
         access_token: res,
@@ -57,7 +57,23 @@ async function invite(
       console.log("used this token: " + res);
     })
     .then(() => {
-      sendInvite(duration, email, userName, comment, startTime);
+      return sendInvite(
+        duration,
+        email,
+        userName,
+        comment,
+        new Date(startTime)
+      ).then((res) => {
+        if (res) {
+          return Promise.resolve(true);
+        } else {
+          return Promise.resolve(false);
+        }
+      });
+    })
+    .catch((err) => {
+      console.log("error occurred: " + err);
+      return Promise.resolve(false);
     });
 }
 
@@ -133,11 +149,12 @@ async function sendInvite(
       })
       .execute((event: any) => {
         console.log("Event created: " + event.status);
+        return Promise.resolve(true);
         // result = event.status.toLocaleString() === "complete";
       });
   } catch (err) {
     console.log("an error in the list");
     console.log(err);
-    return Promise.resolve();
+    return Promise.resolve(false);
   }
 }
