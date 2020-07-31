@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { useMutation } from "react-apollo";
 import gql from "graphql-tag";
 import { useQuery } from "@apollo/react-hooks";
+import { Link } from "react-router-dom";
 
 interface SubmitPagePropsInterface
   extends RouteComponentProps<{ id: string; time: string }> {
@@ -151,7 +152,7 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     console.log(data.email);
     clientEmail.email = data.email;
     if (
-      !/^[a-zA-Z0-9]+[a-zA-Z0-9_.]*@[a-zA-Z0-9]+.[A-Za-z]+$/.test(data.email)
+      !/^[a-zA-Z0-9]+[a-zA-Z0-9_.]*@[a-zA-Z0-9]+.[A-Za-z.]+$/.test(data.email)
     ) {
       window.alert("invalid email");
     } else {
@@ -170,85 +171,97 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     <div>An Error occurred: {error}</div>
   ) : (
     <body style={{ background: "rgba(131, 196, 197)" }}>
-      <div style={{ padding: "1rem" }}>
-        <TopFormat>
-          <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+      {data.link_url !== null && (
+        <div style={{ padding: "1rem" }}>
+          <TopFormat>
+            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
 
-          <div
-            style={{
-              justifyContent: "center",
-              alignContent: "center",
-              display: "flex",
-              flexDirection: "row",
-              borderTop: "5px solid grey",
-              margin: 5,
-            }}
-          >
-            <h1
+            <div
               style={{
-                margin: 0,
                 justifyContent: "center",
-                top: 20,
+                alignContent: "center",
+                display: "flex",
+                flexDirection: "row",
+                borderTop: "5px solid grey",
+                margin: 5,
               }}
             >
-              Submit Info Page
-            </h1>
-          </div>
-        </TopFormat>
-        {!data.link_url.used && (
-          <MainBodyFormat>
-            <h3 style={{ margin: 20 }}>
-              {" "}
-              Your scheduled date is {scheduledDate.toString()}
-            </h3>
-            <h4 style={{ margin: 20 }}>
-              {" "}
-              Please input your information below to confirm your meeting.
-            </h4>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div style={{ display: "flex", flexDirection: "row" }}>
-                <label htmlFor="firstName">
-                  First Name
-                  <Inputformat name="firstName" id="firstName" ref={register} />
-                </label>
-
-                <label htmlFor="lastName">
-                  Last Name
-                  <Inputformat name="lastName" id="lastName" ref={register} />
-                </label>
-              </div>
-
-              <div>
-                <label htmlFor="email">Email Address</label>
-                <Inputformat name="email" id="email" ref={register} />
-              </div>
-
-              <div>
-                <label htmlFor="comments">Comments/Questions?</label>
-                <Inputformat name="comments" id="comments" ref={register} />
-              </div>
-
-              <div
-                className="form-group"
-                style={{ display: "flex", flexDirection: "column" }}
+              <h1
+                style={{
+                  margin: 0,
+                  justifyContent: "center",
+                  top: 20,
+                }}
               >
-                <button type="submit" className="btn btn-primary">
-                  Submit Info
-                </button>
-              </div>
-            </form>
-          </MainBodyFormat>
-        )}
+                Submit Info Page
+              </h1>
+            </div>
+          </TopFormat>
+          {!data.link_url.used && (
+            <MainBodyFormat>
+              <h3 style={{ margin: 20 }}>
+                {" "}
+                Your scheduled date is {scheduledDate.toString()}
+              </h3>
+              <h4 style={{ margin: 20 }}>
+                {" "}
+                Please input your information below to confirm your meeting.
+              </h4>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <div style={{ display: "flex", flexDirection: "row" }}>
+                  <label htmlFor="firstName">
+                    First Name
+                    <Inputformat
+                      name="firstName"
+                      id="firstName"
+                      ref={register}
+                    />
+                  </label>
 
-        {data.link_url.used && (
-          <MainErrorBodyFormat>
-            <h1 style={{ top: 10, margin: 20 }}>
-              Sorry! Link has been used! 😢
-            </h1>
-          </MainErrorBodyFormat>
-        )}
-        {/* <pre id="content"></pre> */}
-      </div>
+                  <label htmlFor="lastName">
+                    Last Name
+                    <Inputformat name="lastName" id="lastName" ref={register} />
+                  </label>
+                </div>
+
+                <div>
+                  <label htmlFor="email">Email Address</label>
+                  <Inputformat name="email" id="email" ref={register} />
+                </div>
+
+                <div>
+                  <label htmlFor="comments">Comments/Questions?</label>
+                  <Inputformat name="comments" id="comments" ref={register} />
+                </div>
+
+                <div
+                  className="form-group"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <button type="submit" className="btn btn-primary">
+                    Submit Info
+                  </button>
+                </div>
+              </form>
+            </MainBodyFormat>
+          )}
+
+          {data.link_url.used && (
+            <MainErrorBodyFormat>
+              <h1 style={{ top: 10, margin: 20 }}>
+                Sorry! Link has been used! 😢
+              </h1>
+            </MainErrorBodyFormat>
+          )}
+          {/* <pre id="content"></pre> */}
+        </div>
+      )}
+      {data.link_url === null && (
+        <div>
+          <h3> 404 Not Found!</h3>
+          <Link to="/">Main Page</Link>
+        </div>
+      )}
     </body>
   );
 };

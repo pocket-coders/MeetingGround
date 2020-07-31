@@ -18,8 +18,7 @@ import setHours from "date-fns/setHours";
 
 import logo from "./img/meetingGroundLogo.png";
 
-import Redirect, { withRouter } from "react-router-dom";
-import { stringify } from "querystring";
+import { Link } from "react-router-dom";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
@@ -31,11 +30,11 @@ type Host = {
   lastname: string;
 };
 
-type Link = {
-  link: string;
-  duration: number;
-  email: string;
-};
+// type Link = {
+//   link: string;
+//   duration: number;
+//   email: string;
+// };
 
 const urlId: {
   urlid: string;
@@ -351,131 +350,137 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
       <div>An Error occurred: {error}</div>
     ) : (
       <body style={{ background: "rgba(131, 196, 197)" }}>
-        <div style={{ padding: "1rem" }}>
-          <TopFormat>
-            <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
-            <div
-              style={{
-                justifyContent: "center",
-                alignContent: "center",
-                display: "flex",
-                flexDirection: "row",
-                borderTop: "5px solid grey",
-                margin: 5,
-              }}
-            >
-              <h1
-                style={{
-                  margin: 0,
-                  justifyContent: "center",
-                  top: 20,
-                }}
-              >
-                Signup Page
-                <h3>{data.used}</h3>
-              </h1>
+        <div>
+          {data.link_url === null && (
+            <div>
+              <h3> 404 Not Found!</h3>
+              <Link to="/">Main Page</Link>
             </div>
-          </TopFormat>
-
-          {!data.link_url.used && (
-            <MainBodyFormat>
-              <h1 style={{ top: 10, margin: 20 }}>
-                Sign up for your {data.link_url.duration} minute meeting.
-              </h1>
-              <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
-              <div className="form-group">
-                <form onSubmit={handleSubmit}>
-                  <ShowSlots linkCode={urlId.urlid} data={data} />
-
-                  <div
-                    className="form-group"
-                    style={{ display: "flex", flexDirection: "column" }}
-                  >
-                    <button type="submit" className="btn btn-primary">
-                      Select Date
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </MainBodyFormat>
           )}
+          {data.link_url !== null && (
+            <div style={{ padding: "1rem" }}>
+              <TopFormat>
+                <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+                <div
+                  style={{
+                    justifyContent: "center",
+                    alignContent: "center",
+                    display: "flex",
+                    flexDirection: "row",
+                    borderTop: "5px solid grey",
+                    margin: 5,
+                  }}
+                >
+                  <h1
+                    style={{
+                      margin: 0,
+                      justifyContent: "center",
+                      top: 20,
+                    }}
+                  >
+                    Signup Page
+                  </h1>
+                </div>
+              </TopFormat>
 
-          {data.link_url.used && (
-            <MainBodyFormat>
-              <h1 style={{ top: 10, margin: 20 }}>
-                Sorry! Link has been used! 😢
-              </h1>
-            </MainBodyFormat>
+              {!data.link_url.used && (
+                <MainBodyFormat>
+                  <h1 style={{ top: 10, margin: 20 }}>
+                    Sign up for your {data.link_url.duration} minute meeting.
+                  </h1>
+                  <h2 style={{ margin: 20 }}>
+                    Select the date, then the time.
+                  </h2>
+                  <div className="form-group">
+                    <form onSubmit={handleSubmit}>
+                      <ShowSlots linkCode={urlId.urlid} data={data} />
+
+                      <div
+                        className="form-group"
+                        style={{ display: "flex", flexDirection: "column" }}
+                      >
+                        <button type="submit" className="btn btn-primary">
+                          Select Date
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </MainBodyFormat>
+              )}
+
+              {data.link_url.used && (
+                <MainBodyFormat>
+                  <h1 style={{ top: 10, margin: 20 }}>
+                    Sorry! Link has been used! 😢
+                  </h1>
+                </MainBodyFormat>
+              )}
+            </div>
           )}
         </div>
+
+        {/*         
+          <div style={{ padding: "1rem" }}>
+            <TopFormat>
+              <LogoCard id="logo" src={logo} alt="Meeting Ground Logo" />
+              <div
+                style={{
+                  justifyContent: "center",
+                  alignContent: "center",
+                  display: "flex",
+                  flexDirection: "row",
+                  borderTop: "5px solid grey",
+                  margin: 5,
+                }}
+              >
+                <h1
+                  style={{
+                    margin: 0,
+                    justifyContent: "center",
+                    top: 20,
+                  }}
+                >
+                  Signup Page
+                </h1>
+              </div>
+            </TopFormat>
+
+            {!data.link_url.used && (
+              <MainBodyFormat>
+                <h1 style={{ top: 10, margin: 20 }}>
+                  Sign up for your {data.link_url.duration} minute meeting.
+                </h1>
+                <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
+                <div className="form-group">
+                  <form onSubmit={handleSubmit}>
+                    <ShowSlots linkCode={urlId.urlid} data={data} />
+
+                    <div
+                      className="form-group"
+                      style={{ display: "flex", flexDirection: "column" }}
+                    >
+                      <button type="submit" className="btn btn-primary">
+                        Select Date
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </MainBodyFormat>
+            )}
+
+            {data.link_url.used && (
+              <MainBodyFormat>
+                <h1 style={{ top: 10, margin: 20 }}>
+                  Sorry! Link has been used! 😢
+                </h1>
+              </MainBodyFormat>
+            )}
+          </div> */}
       </body>
     );
   }
 
-  return (
-    // <ApolloProvider client={client}>
-    <IntervalSetup />
-    // </ApolloProvider>
-  );
+  return <IntervalSetup />;
 };
 
 export default SignUpPage;
-
-// return Promise.resolve([
-//   {
-//     dateKey: "2020-6-20",
-//     values: [
-//       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-//       setHours(setMinutes(new Date(), 30), 18),
-//     ],
-//   },
-//   {
-//     dateKey: "2020-6-22",
-//     values: [
-//       setHours(setMinutes(new Date(), 30), 19),
-//       setHours(setMinutes(new Date(), 30), 17),
-//     ],
-//   },
-// ]);
-
-//TODO: put this on client
-// let resultArray: DictionaryItem[] = [];
-// try {
-//   rv.map((item: any) => {
-//     let myDateKey: string = formatDate(item.start);
-//     item.start = roundStartTimeQuarterHour(item.start);
-//     item.end = roundStartTimeQuarterHour(item.end);
-
-//     let currTimeToBeAdded = item.start;
-
-//     let foundDate = resultArray?.find(
-//       (item) => item.dateKey === myDateKey
-//     );
-//     if (foundDate) {
-//       while (currTimeToBeAdded < item.end) {
-//         foundDate.values.push(currTimeToBeAdded);
-//         currTimeToBeAdded.setTime(
-//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
-//         );
-//       }
-//     } else {
-//       let tempObject: DictionaryItem = {
-//         dateKey: myDateKey,
-//         values: [],
-//       };
-//       while (currTimeToBeAdded < item.end) {
-//         tempObject.values.push(currTimeToBeAdded);
-//         currTimeToBeAdded.setTime(
-//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
-//         );
-//       }
-//       resultArray.push(tempObject);
-//     }
-//     console.log(resultArray);
-//     return Promise.resolve(resultArray);
-//   });
-// } catch (err) {
-//   console.log("an error in the mapping of result array dictionary");
-//   console.log(err);
-//   return Promise.resolve(<DictionaryItem[]>[]);
-// }
