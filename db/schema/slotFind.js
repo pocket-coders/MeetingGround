@@ -1,6 +1,4 @@
 "use strict";
-// import { config } from "../../src/apiGoogleconfig.json";
-// import moment from "moment";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -38,51 +36,125 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var config = require("../../src/apiGoogleconfig.json");
+// import setSeconds from "date-fns/setSeconds";
+// import setMinutes from "date-fns/setMinutes";
+// import setHours from "date-fns/setHours";
+var config = require("./apiGoogleconfig.json");
 var moment = require("moment");
-function slotQuery(accessCode) {
+var axios = require("axios");
+var clientId = "272589905349-scqfilok0ucok40j6h6eo9pcsp7bhadd.apps.googleusercontent.com";
+// const apiKey = "AIzaSyBp8aAD-xwmvna9o1InxK23wkpywLWm0oc";
+var scope = [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.settings.readonly",
+    "https://www.googleapis.com/auth/calendar.events",
+];
+var clientSecret = "vpM3s6IXDLcmZtNpkOFbeQMg";
+var redirectUri = "http://localhost:3000";
+var google = require("googleapis").google;
+var oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+google.options({
+    auth: oauth2Client,
+    http2: true
+});
+function getAccessToken(refresh_token) {
     return __awaiter(this, void 0, void 0, function () {
+        var response, error_1;
         return __generator(this, function (_a) {
-            return [2 /*return*/, gapi.load("client:auth2", function () {
-                    return gapi.client
-                        .init({
-                        apiKey: config.config.apiKey,
-                        clientId: config.config.clientId,
-                        discoveryDocs: config.config.discoveryDocs,
-                        scope: config.config.scope
-                    })
-                        .then(function () {
-                        gapi.client.setToken({
-                            access_token: accessCode
-                        });
-                    }, function (error) {
-                        console.log("An error in Accessing Account");
-                    })
-                        .then(function () {
-                        return gapi.client.calendar.events
-                            .list({
+            switch (_a.label) {
+                case 0:
+                    console.log(refresh_token);
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, axios.post("https://oauth2.googleapis.com/token", {
+                            refresh_token: refresh_token,
+                            client_id: clientId,
+                            client_secret: clientSecret,
+                            redirect_uri: redirectUri,
+                            grant_type: "refresh_token"
+                        })];
+                case 2:
+                    response = _a.sent();
+                    return [2 /*return*/, Promise.resolve(response.data.access_token)];
+                case 3:
+                    error_1 = _a.sent();
+                    console.error("this the error: ", error_1.response.status, error_1.response.statusText, error_1.response.data);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+var calendar = google.calendar("v3");
+function getList() {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, calendar.events.list({
                             calendarId: "primary",
                             timeMin: new Date().toISOString(),
                             showDeleted: false,
                             singleEvents: true,
                             maxResults: 10,
-                            orderBy: "startTime"
-                        })
-                            .then(function (response) {
-                            var events = response.result.items;
-                            var rv = events.map(function (event) { return ({
-                                start: moment.utc(event.start.dateTime).toDate().toISOString(),
-                                end: moment.utc(event.end.dateTime).toDate().toISOString()
-                            }); });
-                            rv.map(function (item) {
-                                console.log(item);
-                            });
-                            return rv;
-                        });
+                            orderBy: "startTime",
+                            auth: oauth2Client
+                        })];
+                case 1:
+                    response = _a.sent();
+                    return [2 /*return*/, Promise.resolve(response.data.items)];
+                case 2:
+                    err_1 = _a.sent();
+                    console.log("an error in the list");
+                    console.log(err_1);
+                    return [2 /*return*/, Promise.resolve([])];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+function slotQuery(refreshCode) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result;
+        return __generator(this, function (_a) {
+            result = [];
+            return [2 /*return*/, getAccessToken(refreshCode)
+                    .then(function (res) {
+                    oauth2Client.setCredentials({
+                        access_token: res,
+                        scope: scope
                     });
+                    console.log("used this token: " + res);
+                })
+                    .then(function () {
+                    return getList().then(function (res) {
+                        console.log("CREATE ARRAY");
+                        var events = res;
+                        // console.log(res);
+                        events.map(function (event) {
+                            return result.push({
+                                start: moment.utc(event.start.dateTime).toDate().toString(),
+                                end: moment.utc(event.end.dateTime).toDate().toString()
+                            });
+                        });
+                        result.map(function (item) {
+                            console.log(item);
+                        });
+                        return result;
+                    });
+                })["catch"](function (err) {
+                    console.log("error here: " + err);
+                    return [{ start: "hehehe", end: "welp" }];
                 })];
         });
     });
 }
-var test = slotQuery("");
+// slotQuery(
+// "1//06cQm-VLd3mA9CgYIARAAGAYSNwF-L9Irc6b4reVW6-AWbpl1uGPE1h-3kkKcHZVbB0O9h50tJTAIhfvrOyWMFI7PQ1tw4n-Gl-o"
+// );
 exports["default"] = slotQuery;

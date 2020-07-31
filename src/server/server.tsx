@@ -6,8 +6,8 @@
 // run with nodemon server
 //import express from "express";
 
-import React, { Component } from "react";
-import { render } from "react-dom";
+import React from "react"; // { Component }
+//import { render } from "react-dom";
 
 import { ApolloClient } from "apollo-client";
 import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";

@@ -18,9 +18,14 @@ const AppendHostToDB = gql`
     $fname: String!
     $lname: String!
     $email: String!
-    $GOA_code: String!
+    $auth_code: String!
   ) {
-    addHost(Fname: $fname, Lname: $lname, email: $email, GOA_code: $GOA_code) {
+    addHost(
+      Fname: $fname
+      Lname: $lname
+      email: $email
+      auth_code: $auth_code
+    ) {
       Lname
       email
     }
@@ -31,32 +36,32 @@ const ConnectPage = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [name, setName] = useState("");
   const [picUrl, setPicUrl] = useState("");
-  const [accesstoken, setAccessToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
+  // const [refreshToken, setRefreshToken] = useState("");
   const [email, setEmail] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
-  const [GOA_code, setGOAcode] = useState(""); //user Google Offline Access code
+  const [auth_code, setAuthcode] = useState(""); //user Google Offline Access code
   const [message, setMessage] = useState("");
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [authorizeButton, setAuthorizeButton] = useState("");
   const [signoutButton, setSignoutButton] = useState("");
+  const [extention, setExtention] = useState("");
   const [mutate] = useMutation(AppendHostToDB);
 
   useEffect(() => {
     async function addHostToDb() {
-      // GOA_code --> Google Offline Access code
+      // auth_code --> Google Offline Access code
       const arg = await mutate({
         variables: {
           fname: fname,
           lname: lname,
           email: email,
-          GOA_code: GOA_code,
+          auth_code: auth_code,
         },
       });
       console.log(arg);
     }
-    if (GOA_code && fname && lname && email) {
+    if (auth_code && fname && lname && email) {
       addHostToDb()
         .then(() => {
           console.log("appended successfully");
@@ -65,7 +70,7 @@ const ConnectPage = () => {
           console.log("an error happened");
         });
     }
-  }, [GOA_code, fname, lname, email, mutate]);
+  }, [auth_code, fname, lname, email, mutate]);
 
   /**
    *  On load, called to load the auth2 library and API client library.
@@ -127,38 +132,21 @@ const ConnectPage = () => {
           .getAuthInstance()
           .grantOfflineAccess()
           .then(function (response: any) {
-            setRefreshToken(response.code);
+            //auth code? not refresh token
+            // setRefreshToken(response.code);
             gapi.auth2.getAuthInstance().signIn();
-            setAccessToken(
-              gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
-                .access_token
-            );
-            console.log("my refresh token: " + refreshToken);
+            // setAuthcode(
+            //   gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
+            //     .access_token
+            // );
             if (response.code) {
               // Hide the sign-in button now that the user is authorized, for example:
               setAuthorizeButton("none");
               //$("#signinButton").attr("style", "display: none");
               console.log("response code: ");
               console.log(response);
-              setGOAcode(response.code);
+              setAuthcode(response.code);
               console.log("After host added/found");
-
-              // Send the code to the server
-              // getter.ajax({
-              //   type: "POST",
-              //   url: "http://example.com/storeauthcode",
-              //   // Always include an `X-Requested-With` header in every AJAX request,
-              //   // to protect against CSRF attacks.
-              //   headers: {
-              //     "X-Requested-With": "XMLHttpRequest",
-              //   },
-              //   contentType: "application/octet-stream; charset=utf-8",
-              //   success: function (result: any) {
-              //     // Handle or verify the server response.
-              //   },
-              //   processData: false,
-              //   data: response["code"],
-              // });
             } else {
               // THERE WAS AN ERROR
               console.log("THERE WAS AN ERROR");
@@ -221,12 +209,6 @@ const ConnectPage = () => {
           .getBasicProfile()
           .getImageUrl()
       );
-      setAccessToken(
-        gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse()
-          .access_token
-      );
-      setRefreshToken(refreshToken);
-
       console.log(email);
       console.log(fname);
       console.log(lname);
@@ -378,9 +360,11 @@ const ConnectPage = () => {
     text-align: center;
   `;
 
-  //TODO take out
-  //console.log(accesstoken);
-  console.log(refreshToken);
+  useEffect(() => {
+    // check if email is already in the data base and allow made uo email
+    setExtention("/home/" + email); //.split("@")[0]);
+  }, [email]);
+
   return (
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
@@ -471,7 +455,7 @@ const ConnectPage = () => {
               <div
                 style={{ margin: 20, display: "flex", flexDirection: "column" }}
               >
-                <Link to="/home" className="btn btn-success" type="button">
+                <Link to={extention} className="btn btn-success" type="button">
                   Continue to Meeting Ground Home
                 </Link>
               </div>

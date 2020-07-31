@@ -25,7 +25,7 @@ import { ApolloClient } from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 
 const link = new HttpLink({
-  uri: "http://localhost:4001/graphql",
+  uri: "http://localhost:4000/graphql",
 });
 const cache = new InMemoryCache();
 
@@ -42,7 +42,7 @@ class App extends Component {
           <Switch>
             <Route exact path="/" component={ConnectPage} />
             <Route exact path="/login" component={ConnectPage} />
-            <Route exact path="/home" component={HomePage} />
+            <Route exact path="/home/:emailId" component={HomePage} />
             <Route exact path="/404" component={NotFoundPage} />
             <Route exact path="/signup/:id" component={SignUpPage} />
             <Route exact path="/connect" component={ConnectPage} />
