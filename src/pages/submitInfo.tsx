@@ -9,6 +9,7 @@ import React, { useState } from "react";
 //You have to use the link component to link between you pages
 import { useMutation } from "react-apollo";
 import gql from "graphql-tag";
+import { useQuery } from "@apollo/react-hooks";
 
 interface SubmitPagePropsInterface
   extends RouteComponentProps<{ id: string; time: string }> {
@@ -53,6 +54,17 @@ const Inputformat = styled.input`
   box-sizing: border-box;
 `;
 
+const MainErrorBodyFormat = styled.div`
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  height: 650px;
+  border-radius: 25px;
+`;
+
 const meetingInfo: {
   hostEmail: string;
   duration: number;
@@ -82,6 +94,16 @@ const createEvent = gql`
       startTime: $startTime
     ) {
       state
+    }
+  }
+`;
+
+const GET_UNIQUE_LINK = gql`
+  query($url: String) {
+    link_url(url: $url) {
+      url
+      duration
+      used
     }
   }
 `;
@@ -138,7 +160,15 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
     }
   };
 
-  return (
+  const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
+    variables: { url: urlId.urlid },
+  });
+
+  return loading ? (
+    <div>loading</div>
+  ) : error ? (
+    <div>An Error occurred: {error}</div>
+  ) : (
     <body style={{ background: "rgba(131, 196, 197)" }}>
       <div style={{ padding: "1rem" }}>
         <TopFormat>
@@ -165,49 +195,59 @@ const SubmitInfoPage: React.FC<SubmitPagePropsInterface> = (
             </h1>
           </div>
         </TopFormat>
-        <MainBodyFormat>
-          <h3 style={{ margin: 20 }}>
-            {" "}
-            Your scheduled date is {scheduledDate.toString()}
-          </h3>
-          <h4 style={{ margin: 20 }}>
-            {" "}
-            Please input your information below to confirm your meeting.
-          </h4>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div style={{ display: "flex", flexDirection: "row" }}>
-              <label htmlFor="firstName">
-                First Name
-                <Inputformat name="firstName" id="firstName" ref={register} />
-              </label>
+        {!data.link_url.used && (
+          <MainBodyFormat>
+            <h3 style={{ margin: 20 }}>
+              {" "}
+              Your scheduled date is {scheduledDate.toString()}
+            </h3>
+            <h4 style={{ margin: 20 }}>
+              {" "}
+              Please input your information below to confirm your meeting.
+            </h4>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div style={{ display: "flex", flexDirection: "row" }}>
+                <label htmlFor="firstName">
+                  First Name
+                  <Inputformat name="firstName" id="firstName" ref={register} />
+                </label>
 
-              <label htmlFor="lastName">
-                Last Name
-                <Inputformat name="lastName" id="lastName" ref={register} />
-              </label>
-            </div>
+                <label htmlFor="lastName">
+                  Last Name
+                  <Inputformat name="lastName" id="lastName" ref={register} />
+                </label>
+              </div>
 
-            <div>
-              <label htmlFor="email">Email Address</label>
-              <Inputformat name="email" id="email" ref={register} />
-            </div>
+              <div>
+                <label htmlFor="email">Email Address</label>
+                <Inputformat name="email" id="email" ref={register} />
+              </div>
 
-            <div>
-              <label htmlFor="comments">Comments/Questions?</label>
-              <Inputformat name="comments" id="comments" ref={register} />
-            </div>
+              <div>
+                <label htmlFor="comments">Comments/Questions?</label>
+                <Inputformat name="comments" id="comments" ref={register} />
+              </div>
 
-            <div
-              className="form-group"
-              style={{ display: "flex", flexDirection: "column" }}
-            >
-              <button type="submit" className="btn btn-primary">
-                Submit Info
-              </button>
-            </div>
-          </form>
-        </MainBodyFormat>
-        <pre id="content"></pre>
+              <div
+                className="form-group"
+                style={{ display: "flex", flexDirection: "column" }}
+              >
+                <button type="submit" className="btn btn-primary">
+                  Submit Info
+                </button>
+              </div>
+            </form>
+          </MainBodyFormat>
+        )}
+
+        {data.link_url.used && (
+          <MainErrorBodyFormat>
+            <h1 style={{ top: 10, margin: 20 }}>
+              Sorry! Link has been used! 😢
+            </h1>
+          </MainErrorBodyFormat>
+        )}
+        {/* <pre id="content"></pre> */}
       </div>
     </body>
   );
