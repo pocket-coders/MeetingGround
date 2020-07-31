@@ -45,6 +45,7 @@ var Host = require("../models/host");
 var config = require("./apiGoogleconfig.json");
 var axios = require("axios");
 var moment = require("moment");
+var ObjectId = require("mongodb").ObjectID;
 var GraphQLObjectType = graphql.GraphQLObjectType, GraphQLString = graphql.GraphQLString, GraphQLID = graphql.GraphQLID, GraphQLInt = graphql.GraphQLInt, GraphQLList = graphql.GraphQLList, GraphQLNonNull = graphql.GraphQLNonNull, GraphQLBoolean = graphql.GraphQLBoolean;
 function getRefreshToken(code) {
     return __awaiter(this, void 0, void 0, function () {
@@ -62,10 +63,6 @@ function getRefreshToken(code) {
                         })];
                 case 1:
                     response = _a.sent();
-                    // console.log("refresh");
-                    // console.log(response.data.refresh_token);
-                    // console.log(response.status);
-                    // console.log(response.statusText);
                     return [2 /*return*/, Promise.resolve(response.data.refresh_token)];
                 case 2:
                     error_1 = _a.sent();
@@ -83,6 +80,9 @@ var LinkType = new GraphQLObjectType({
         id: { type: GraphQLID },
         url: { type: GraphQLString },
         duration: { type: GraphQLInt },
+        used: {
+            type: GraphQLBoolean
+        },
         host: {
             type: HostType,
             resolve: function (parent, args) {
@@ -179,66 +179,6 @@ var RootQuery = new GraphQLObjectType({
                 });
             }
         },
-        // create_event: {
-        //   type: EventCreateType,
-        //   args: {
-        //     url: { type: new GraphQLNonNull(GraphQLString) },
-        //     email: { type: new GraphQLNonNull(GraphQLString) },
-        //     username: { type: new GraphQLNonNull(GraphQLString) },
-        //     comment: { type: new GraphQLNonNull(GraphQLString) },
-        //     startTime: { type: new GraphQLNonNull(GraphQLString) },
-        //   },
-        //   async resolve(
-        //     parent,
-        //     // args
-        //     { url, duration, email, username, comment, startTime }
-        //   ) {
-        //     console.log("the variable are: ", {
-        //       url,
-        //       duration,
-        //       email,
-        //       username,
-        //       comment,
-        //       startTime,
-        //     });
-        //     // const link = Link.findById(url); //use url link to get Link object
-        //     const link_object = await Link.findOne({ url }).select("hostId").exec();
-        //     // const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
-        //     const link_object_duration = await Link.findOne({ url })
-        //       .select("duration")
-        //       .exec();
-        //     const refresh_token_object = await Host.findOne({
-        //       _id: link_object.hostId,
-        //     })
-        //       .select("refresh_token")
-        //       .exec();
-        //     const host_first = await Host.findOne({
-        //       _id: link_object.hostId,
-        //     })
-        //       .select("Fname")
-        //       .exec();
-        //     const host_last = await Host.findOne({
-        //       _id: link_object.hostId,
-        //     })
-        //       .select("Lname")
-        //       .exec();
-        //     const slots = await invite(
-        //       refresh_token_object.refresh_token,
-        //       link_object_duration.duration,
-        //       email,
-        //       username,
-        //       comment,
-        //       startTime,
-        //       host_first.Fname,
-        //       host_last.Lname
-        //     ); //use refresh token to get list of excluded events
-        //     console.log(slots);
-        //     let tempEvent: eventCreateAction = {
-        //       state: slots,
-        //     };
-        //     return tempEvent;
-        //   },
-        // },
         host: {
             type: HostType,
             args: { id: { type: GraphQLID } },
@@ -334,15 +274,6 @@ var Mutation = new GraphQLObjectType({
                                         return host.save(); //save to the database and return results
                                     }
                                 });
-                                // if (!hostExists) {
-                                //   const host = new Host({
-                                //     Fname: Fname,
-                                //     Lname: Lname,
-                                //     email: email,
-                                //     refresh_token: refresh,
-                                //   });
-                                //   return host.save(); //save to the database and return results
-                                // }
                                 return [2 /*return*/, null];
                         }
                     });
@@ -371,7 +302,8 @@ var Mutation = new GraphQLObjectType({
                                     link = new Link({
                                         url: url,
                                         duration: duration,
-                                        hostId: hostId
+                                        hostId: hostId,
+                                        used: false
                                     });
                                     console.log("link added to data base");
                                     return [2 /*return*/, link.save()]; //save to the database and return results
@@ -396,7 +328,7 @@ var Mutation = new GraphQLObjectType({
             _a) {
                 var url = _a.url, duration = _a.duration, email = _a.email, username = _a.username, comment = _a.comment, startTime = _a.startTime;
                 return __awaiter(this, void 0, void 0, function () {
-                    var link_object, link_object_duration, refresh_token_object, host_first, host_last, slots, tempEvent;
+                    var link_object, link_object_duration, refresh_token_object, host_first, host_last, slots, tempEvent, tempID, temp_used;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -443,6 +375,14 @@ var Mutation = new GraphQLObjectType({
                                 tempEvent = {
                                     state: slots
                                 };
+                                return [4 /*yield*/, Link.findOne({ url: url }).exec()];
+                            case 7:
+                                tempID = _b.sent();
+                                tempID.collection.update({ _id: ObjectId(tempID._id) }, { $set: { used: true } });
+                                return [4 /*yield*/, Link.findOne({ url: url }).select("used").exec()];
+                            case 8:
+                                temp_used = _b.sent();
+                                console.log("TEMP USED" + temp_used);
                                 return [2 /*return*/, tempEvent];
                         }
                     });
