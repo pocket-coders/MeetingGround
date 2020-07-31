@@ -5,11 +5,6 @@ import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
 // import { Query, graphql } from "react-apollo";
 import { useQuery } from "@apollo/react-hooks";
-import { ApolloClient } from "apollo-client";
-import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
-import { HttpLink } from "apollo-link-http";
-import { ApolloProvider } from "react-apollo";
-import MyCalendar from "./Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -24,22 +19,11 @@ import setHours from "date-fns/setHours";
 import logo from "./img/meetingGroundLogo.png";
 
 import Redirect, { withRouter } from "react-router-dom";
+import { stringify } from "querystring";
 interface SignUpPagePropsInterface extends RouteComponentProps<{ id: string }> {
   // Other props that belong to component it self not Router
 }
 
-const cache = new InMemoryCache();
-
-const link = new HttpLink({
-  uri: "http://localhost:4000/graphql",
-});
-
-const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-  cache,
-  link,
-});
-
-//const id = this.props.match.params.id  ;//this.props.match.params.id;
 type Host = {
   // Mistake #3: The type is wrong here, and that should be caught at compile-time
   email: string;
@@ -106,17 +90,40 @@ const MainBodyFormat = styled.div`
 const temp: any[] = [];
 let interval: number;
 
-// let handleChange = (date: any) => {
-//   this.setState({
-//     startDate: date,
-//   });
-// };
+type DictionaryItem = {
+  dateKey: string;
+  values: Date[];
+};
+
+const excludeQuery = gql`
+  query($url: String) {
+    list_available_slots(url: $url) {
+      start
+      end
+    }
+  }
+`;
+
+const GET_UNIQUE_LINK = gql`
+  query($url: String) {
+    link_url(url: $url) {
+      url
+      duration
+      used
+    }
+  }
+`;
 
 const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   props: SignUpPagePropsInterface
 ) => {
   const id = props.match.params.id;
   urlId.urlid = id;
+
+  type slotType = {
+    start: string;
+    end: string;
+  };
 
   const [startDate, setStartDate] = useState<Date>(
     setHours(setMinutes(new Date(), 30), 16)
@@ -125,60 +132,118 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
   const [startTime, setStartTime] = useState<Date>(
     setHours(setMinutes(new Date(), 30), 16)
   );
-  //const [interval, setInterval] = useState(45);
-  const [userEmail, setUserEmail] = useState("");
 
   let handleColor = (time: any) => {
     return time.getHours() > 12 ? "text-success" : "text-error";
   };
 
-  type DictionaryItem = {
-    dateKey: string;
-    values: Date[];
-  };
+  let resultArray: DictionaryItem[] = [];
 
-  const [excludeTimeDictionary, setExcludeTimeDictionary] = useState<
-    DictionaryItem[]
-  >([
-    {
-      dateKey: "2020-6-20",
-      values: [
-        setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
-        setHours(setMinutes(new Date(), 30), 18),
-      ],
-    },
-    {
-      dateKey: "2020-6-22",
-      values: [
-        setHours(setMinutes(new Date(), 30), 19),
-        setHours(setMinutes(new Date(), 30), 17),
-      ],
-    },
-  ]);
-  //setExcludeTimeDictionary();
-  //let excludeTimeList: Date[] = [];
-  const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+  function useEvents(link: string) {
+    const { loading, error, data } = useQuery(excludeQuery, {
+      variables: { url: link },
+    });
+    console.log("DATAA HERE");
 
-  //TODO: BELOW IS FOR WHEN DATABASE IS CONNECTED
-  // function useEvents(linkCode: string) {
-  //     return useQuery(GetEventsQuery, variable: { linkCode } );
-  // }
-  function useEvents(linkCode: string) {
-    return {
-      loading: false,
-      error: null,
-      events: excludeTimeDictionary,
-    };
+    // console.log(data.list_available_slots);
+
+    const available_slots = data?.list_available_slots;
+    console.log(available_slots);
+
+    try {
+      console.log("Listing items");
+      available_slots.map((item: any) => {
+        console.log(item);
+        let start = new Date(roundStartTimeQuarterHour(new Date(item.start)));
+        let end = new Date(roundEndTimeQuarterHour(new Date(item.end)));
+        let myDateKey: string = formatDate(start);
+
+        console.log("start" + start);
+        console.log("end" + end);
+
+        let currTimeToBeAdded = start;
+
+        let foundDate = resultArray.find((item) => item.dateKey === myDateKey);
+        console.log("curr tiem to be added: " + currTimeToBeAdded);
+        if (foundDate) {
+          // console.log("if found date");
+          console.log("foundDate before");
+          console.log(foundDate);
+          while (currTimeToBeAdded < end) {
+            foundDate.values.push(currTimeToBeAdded);
+            currTimeToBeAdded = new Date(
+              currTimeToBeAdded.getTime() + 15 * 60000
+            );
+            console.log("add 15 currtimetobeadded: " + currTimeToBeAdded);
+          }
+          console.log("foundDate after");
+          console.log(foundDate);
+        } else {
+          //console.log("else found date");
+          let tempObject: DictionaryItem = {
+            dateKey: myDateKey,
+            values: [],
+          };
+          while (currTimeToBeAdded < end) {
+            tempObject.values.push(currTimeToBeAdded);
+            currTimeToBeAdded = new Date(
+              currTimeToBeAdded.getTime() + 15 * 60000
+            );
+            console.log("add 15 currtimetobeadded: " + currTimeToBeAdded);
+          }
+          resultArray.push(tempObject);
+        }
+      });
+      console.log("RESULT ARRAY");
+      console.log(resultArray);
+      //return Promise.resolve(resultArray);
+    } catch (err) {
+      console.log("an error in the mapping of result array dictionary");
+      console.log(err);
+      resultArray = [];
+      //return Promise.resolve(resultArray);
+    }
+    // const events = ;
+
+    return { loading, error, resultArray };
   }
+
+  const [excludeTimeList, setExcludeTimeList] = useState<Date[]>([]);
+  //let excludeTimeList: Date[] = [];
 
   type ShowSlotsProps = {
     linkCode: string;
     data: any;
   };
 
+  function roundStartTimeQuarterHour(time: Date) {
+    const timeToReturn = time;
+
+    timeToReturn.setMilliseconds(
+      Math.floor(timeToReturn.getMilliseconds() / 1000) * 1000
+    );
+    timeToReturn.setSeconds(Math.floor(timeToReturn.getSeconds() / 60) * 60);
+    timeToReturn.setMinutes(Math.floor(timeToReturn.getMinutes() / 15) * 15);
+    return timeToReturn;
+  }
+
+  function roundEndTimeQuarterHour(time: Date) {
+    const timeToReturn = time;
+
+    timeToReturn.setMilliseconds(
+      Math.ceil(timeToReturn.getMilliseconds() / 1000) * 1000
+    );
+    timeToReturn.setSeconds(Math.ceil(timeToReturn.getSeconds() / 60) * 60);
+    timeToReturn.setMinutes(Math.ceil(timeToReturn.getMinutes() / 15) * 15);
+    return timeToReturn;
+  }
+
+  // const formatDate = (date: Date) =>
+  //   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
   function ShowSlots(showSlotInfo: ShowSlotsProps) {
-    //{ linkCode }: ShowSlotsProps
-    const { loading, error, events } = useEvents(showSlotInfo.linkCode);
+    console.log("loading show slots again");
+    const { loading, error, resultArray } = useEvents(showSlotInfo.linkCode);
     return loading ? (
       <div>loading</div>
     ) : error ? (
@@ -191,23 +256,40 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
         <DatePicker
           selected={startDate}
           onChange={(date: Date) => {
+            console.log("DATE CHANGED");
             setStartDate(date);
             const key = formatDate(date);
 
             console.log("mykey: " + key);
             //TODO: change setExcludeTimeList to get from server query
 
-            let tempDictionaryItem = events.find(
-              (item) => item.dateKey === key
+            let tempDictionaryItem = resultArray.find(
+              (item: any) => item.dateKey === key
             );
+
             if (tempDictionaryItem !== undefined) {
-              setExcludeTimeList(tempDictionaryItem.values);
+              console.log("setting exclude time list");
+              let newDictionaryItemList: Date[] = [];
+              tempDictionaryItem.values.map((input) => {
+                let newInput = setSeconds(
+                  setMinutes(
+                    setHours(new Date(), input.getHours()),
+                    input.getMinutes()
+                  ),
+                  0
+                );
+                newDictionaryItemList.push(newInput);
+              });
+
+              setExcludeTimeList(newDictionaryItemList);
+              // excludeTimeList = newDictionaryItemList;
             }
+            console.log("EXCLUDE TIME LIST");
             console.log(excludeTimeList);
             setSelect(true);
           }}
           timeFormat="HH:mm"
-          timeIntervals={showSlotInfo.data.link.duration}
+          timeIntervals={showSlotInfo.data.link_url.duration}
           inline
         />
         {selectTime && (
@@ -215,9 +297,13 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             showTimeSelect
             showTimeSelectOnly
             selected={startTime}
-            onChange={(date: Date) => setStartTime(date)}
+            onChange={(date: Date) => {
+              setStartTime(date);
+              console.log("the list after the click WHYYYYYYYYYY");
+              console.log(excludeTimeList);
+            }}
             timeFormat="HH:mm"
-            timeIntervals={showSlotInfo.data.link.duration}
+            timeIntervals={showSlotInfo.data.link_url.duration}
             excludeTimes={excludeTimeList}
             inline
           />
@@ -256,7 +342,7 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
 
   function IntervalSetup() {
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
-      variables: { id: urlId.urlid },
+      variables: { url: urlId.urlid },
     });
 
     return loading ? (
@@ -280,87 +366,116 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
             >
               <h1
                 style={{
-                  // position: "relative",
                   margin: 0,
-                  // float: "left",
-                  // left: "15%",
                   justifyContent: "center",
                   top: 20,
                 }}
               >
                 Signup Page
+                <h3>{data.used}</h3>
               </h1>
             </div>
           </TopFormat>
 
-          <MainBodyFormat>
-            <h1 style={{ top: 10, margin: 20 }}>
-              Sign up for your {data.link.duration} minute meeting.
-            </h1>
-            <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
-            <div className="form-group">
-              <form onSubmit={handleSubmit}>
-                <ShowSlots linkCode={urlId.urlid} data={data} />
+          {!data.link_url.used && (
+            <MainBodyFormat>
+              <h1 style={{ top: 10, margin: 20 }}>
+                Sign up for your {data.link_url.duration} minute meeting.
+              </h1>
+              <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
+              <div className="form-group">
+                <form onSubmit={handleSubmit}>
+                  <ShowSlots linkCode={urlId.urlid} data={data} />
 
-                <div
-                  className="form-group"
-                  style={{ display: "flex", flexDirection: "column" }}
-                >
-                  <button type="submit" className="btn btn-primary">
-                    Select Date
-                  </button>
-                </div>
-              </form>
-            </div>
-          </MainBodyFormat>
+                  <div
+                    className="form-group"
+                    style={{ display: "flex", flexDirection: "column" }}
+                  >
+                    <button type="submit" className="btn btn-primary">
+                      Select Date
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </MainBodyFormat>
+          )}
+
+          {data.link_url.used && (
+            <MainBodyFormat>
+              <h1 style={{ top: 10, margin: 20 }}>
+                Sorry! Link has been used! 😢
+              </h1>
+            </MainBodyFormat>
+          )}
         </div>
       </body>
     );
   }
 
-  //interval = IntervalSetup() > 0 ? IntervalSetup() : 45;
-
   return (
-    <ApolloProvider client={client}>
-      {/* <SignUpServer /> */}
-
-      <IntervalSetup />
-
-      {/* <CalendarCard>
-        <IntervalSetup />
-      </CalendarCard> */}
-      {/* <CalendarCard>
-        <MyCalendar myList={temp} />
-      </CalendarCard> */}
-    </ApolloProvider>
+    // <ApolloProvider client={client}>
+    <IntervalSetup />
+    // </ApolloProvider>
   );
 };
 
-function SignUpServer() {
-  const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
-    variables: { id: urlId.urlid },
-  });
-  return loading ? (
-    <div>loading</div>
-  ) : error ? (
-    <div>An Error occurred: {error}</div>
-  ) : (
-    <ul>
-      <li>
-        {data.link.link} used by {data.link.email} for {data.link.duration}
-      </li>
-    </ul>
-  );
-}
-
-const GET_UNIQUE_LINK = gql`
-  query($id: String) {
-    link(id: $id) {
-      email
-      duration
-      link
-    }
-  }
-`;
-
 export default SignUpPage;
+
+// return Promise.resolve([
+//   {
+//     dateKey: "2020-6-20",
+//     values: [
+//       setSeconds(setHours(setMinutes(new Date(), 0), 17), 0), // 17:00
+//       setHours(setMinutes(new Date(), 30), 18),
+//     ],
+//   },
+//   {
+//     dateKey: "2020-6-22",
+//     values: [
+//       setHours(setMinutes(new Date(), 30), 19),
+//       setHours(setMinutes(new Date(), 30), 17),
+//     ],
+//   },
+// ]);
+
+//TODO: put this on client
+// let resultArray: DictionaryItem[] = [];
+// try {
+//   rv.map((item: any) => {
+//     let myDateKey: string = formatDate(item.start);
+//     item.start = roundStartTimeQuarterHour(item.start);
+//     item.end = roundStartTimeQuarterHour(item.end);
+
+//     let currTimeToBeAdded = item.start;
+
+//     let foundDate = resultArray?.find(
+//       (item) => item.dateKey === myDateKey
+//     );
+//     if (foundDate) {
+//       while (currTimeToBeAdded < item.end) {
+//         foundDate.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//     } else {
+//       let tempObject: DictionaryItem = {
+//         dateKey: myDateKey,
+//         values: [],
+//       };
+//       while (currTimeToBeAdded < item.end) {
+//         tempObject.values.push(currTimeToBeAdded);
+//         currTimeToBeAdded.setTime(
+//           currTimeToBeAdded.getTime() + 15 * 1000 * 60
+//         );
+//       }
+//       resultArray.push(tempObject);
+//     }
+//     console.log(resultArray);
+//     return Promise.resolve(resultArray);
+//   });
+// } catch (err) {
+//   console.log("an error in the mapping of result array dictionary");
+//   console.log(err);
+//   return Promise.resolve(<DictionaryItem[]>[]);
+// }
