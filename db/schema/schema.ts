@@ -7,6 +7,7 @@ const Host = require("../models/host");
 const config = require("./apiGoogleconfig.json");
 const axios = require("axios");
 const moment = require("moment");
+const ObjectId = require("mongodb").ObjectID;
 
 const {
   GraphQLObjectType,
@@ -28,10 +29,6 @@ async function getRefreshToken(code: any) {
       redirect_uri: "http://localhost:3000",
       grant_type: "authorization_code",
     });
-    // console.log("refresh");
-    // console.log(response.data.refresh_token);
-    // console.log(response.status);
-    // console.log(response.statusText);
     return Promise.resolve(response.data.refresh_token);
   } catch (error) {
     console.error(
@@ -49,6 +46,9 @@ const LinkType: graphql.GraphQLObjectType<any, any> = new GraphQLObjectType({
     id: { type: GraphQLID },
     url: { type: GraphQLString },
     duration: { type: GraphQLInt },
+    used: {
+      type: GraphQLBoolean,
+    },
     host: {
       type: HostType,
       resolve(parent, args) {
@@ -150,66 +150,6 @@ const RootQuery = new GraphQLObjectType({
         return tempResults;
       },
     },
-    // create_event: {
-    //   type: EventCreateType,
-    //   args: {
-    //     url: { type: new GraphQLNonNull(GraphQLString) },
-    //     email: { type: new GraphQLNonNull(GraphQLString) },
-    //     username: { type: new GraphQLNonNull(GraphQLString) },
-    //     comment: { type: new GraphQLNonNull(GraphQLString) },
-    //     startTime: { type: new GraphQLNonNull(GraphQLString) },
-    //   },
-    //   async resolve(
-    //     parent,
-    //     // args
-    //     { url, duration, email, username, comment, startTime }
-    //   ) {
-    //     console.log("the variable are: ", {
-    //       url,
-    //       duration,
-    //       email,
-    //       username,
-    //       comment,
-    //       startTime,
-    //     });
-    //     // const link = Link.findById(url); //use url link to get Link object
-    //     const link_object = await Link.findOne({ url }).select("hostId").exec();
-    //     // const host = Host.findOne({ _id: link_object.hostId }); //.where('refresh_token'); //use Link object to get Host object
-    //     const link_object_duration = await Link.findOne({ url })
-    //       .select("duration")
-    //       .exec();
-    //     const refresh_token_object = await Host.findOne({
-    //       _id: link_object.hostId,
-    //     })
-    //       .select("refresh_token")
-    //       .exec();
-    //     const host_first = await Host.findOne({
-    //       _id: link_object.hostId,
-    //     })
-    //       .select("Fname")
-    //       .exec();
-    //     const host_last = await Host.findOne({
-    //       _id: link_object.hostId,
-    //     })
-    //       .select("Lname")
-    //       .exec();
-    //     const slots = await invite(
-    //       refresh_token_object.refresh_token,
-    //       link_object_duration.duration,
-    //       email,
-    //       username,
-    //       comment,
-    //       startTime,
-    //       host_first.Fname,
-    //       host_last.Lname
-    //     ); //use refresh token to get list of excluded events
-    //     console.log(slots);
-    //     let tempEvent: eventCreateAction = {
-    //       state: slots,
-    //     };
-    //     return tempEvent;
-    //   },
-    // },
     host: {
       type: HostType,
       args: { id: { type: GraphQLID } },
@@ -279,15 +219,6 @@ const Mutation = new GraphQLObjectType({
             return host.save(); //save to the database and return results
           }
         });
-        // if (!hostExists) {
-        //   const host = new Host({
-        //     Fname: Fname,
-        //     Lname: Lname,
-        //     email: email,
-        //     refresh_token: refresh,
-        //   });
-        //   return host.save(); //save to the database and return results
-        // }
         return null;
       },
     },
@@ -306,6 +237,7 @@ const Mutation = new GraphQLObjectType({
             url: url,
             duration: duration,
             hostId: hostId,
+            used: false,
           });
           console.log("link added to data base");
           return link.save(); //save to the database and return results
@@ -340,6 +272,7 @@ const Mutation = new GraphQLObjectType({
         const link_object_duration = await Link.findOne({ url })
           .select("duration")
           .exec();
+
         const refresh_token_object = await Host.findOne({
           _id: link_object.hostId,
         })
@@ -369,6 +302,16 @@ const Mutation = new GraphQLObjectType({
         let tempEvent: eventCreateAction = {
           state: slots,
         };
+        //const link_object_used = await Link.findOne({ url })
+        // db.users.update({_id:"2xnoy3jqcHCaFp7Br"}, {$set: { "profile.role":"admin"}})
+        const tempID = await Link.findOne({ url }).exec();
+        tempID.collection.update(
+          { _id: ObjectId(tempID._id) },
+          { $set: { used: true } }
+        );
+        const temp_used = await Link.findOne({ url }).select("used").exec();
+        console.log("TEMP USED" + temp_used);
+
         return tempEvent;
       },
     },

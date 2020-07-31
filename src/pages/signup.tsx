@@ -5,11 +5,6 @@ import { RouteComponentProps } from "react-router-dom";
 import gql from "graphql-tag";
 // import { Query, graphql } from "react-apollo";
 import { useQuery } from "@apollo/react-hooks";
-import { ApolloClient } from "apollo-client";
-import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
-import { HttpLink } from "apollo-link-http";
-import { ApolloProvider } from "react-apollo";
-import MyCalendar from "./Moment";
 import styled from "@emotion/styled";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -95,12 +90,6 @@ const MainBodyFormat = styled.div`
 const temp: any[] = [];
 let interval: number;
 
-// let handleChange = (date: any) => {
-//   this.setState({
-//     startDate: date,
-//   });
-// };
-
 type DictionaryItem = {
   dateKey: string;
   values: Date[];
@@ -120,6 +109,7 @@ const GET_UNIQUE_LINK = gql`
     link_url(url: $url) {
       url
       duration
+      used
     }
   }
 `;
@@ -354,8 +344,6 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
     const { loading, error, data } = useQuery(GET_UNIQUE_LINK, {
       variables: { url: urlId.urlid },
     });
-    console.log("finished query");
-    console.log(data);
 
     return loading ? (
       <div>loading</div>
@@ -384,30 +372,41 @@ const SignUpPage: React.FC<SignUpPagePropsInterface> = (
                 }}
               >
                 Signup Page
+                <h3>{data.used}</h3>
               </h1>
             </div>
           </TopFormat>
 
-          <MainBodyFormat>
-            <h1 style={{ top: 10, margin: 20 }}>
-              Sign up for your {data.link_url.duration} minute meeting.
-            </h1>
-            <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
-            <div className="form-group">
-              <form onSubmit={handleSubmit}>
-                <ShowSlots linkCode={urlId.urlid} data={data} />
+          {!data.link_url.used && (
+            <MainBodyFormat>
+              <h1 style={{ top: 10, margin: 20 }}>
+                Sign up for your {data.link_url.duration} minute meeting.
+              </h1>
+              <h2 style={{ margin: 20 }}>Select the date, then the time.</h2>
+              <div className="form-group">
+                <form onSubmit={handleSubmit}>
+                  <ShowSlots linkCode={urlId.urlid} data={data} />
 
-                <div
-                  className="form-group"
-                  style={{ display: "flex", flexDirection: "column" }}
-                >
-                  <button type="submit" className="btn btn-primary">
-                    Select Date
-                  </button>
-                </div>
-              </form>
-            </div>
-          </MainBodyFormat>
+                  <div
+                    className="form-group"
+                    style={{ display: "flex", flexDirection: "column" }}
+                  >
+                    <button type="submit" className="btn btn-primary">
+                      Select Date
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </MainBodyFormat>
+          )}
+
+          {data.link_url.used && (
+            <MainBodyFormat>
+              <h1 style={{ top: 10, margin: 20 }}>
+                Sorry! Link has been used! 😢
+              </h1>
+            </MainBodyFormat>
+          )}
         </div>
       </body>
     );
