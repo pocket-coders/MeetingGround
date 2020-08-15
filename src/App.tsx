@@ -24,8 +24,11 @@ import { InMemoryCache, NormalizedCacheObject } from "apollo-cache-inmemory";
 import { ApolloClient } from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 
+// const link = new HttpLink({
+//   uri: "http://localhost:4000/graphql",
+// });
 const link = new HttpLink({
-  uri: "http://localhost:4000/graphql",
+  uri: "https://gentle-forest-39512.herokuapp.com/graphql",
 });
 const cache = new InMemoryCache();
 
