@@ -1,5 +1,7 @@
 # MeetingGround
-version 2 - typescript
+Version 2.0: TypeScript
 
-#Final Deployment:
+Created by Ben Tchamba, Kimberly Zhu and Tal Bachar.
+
+# Final Deployment:
 https://meetingground.web.app/
